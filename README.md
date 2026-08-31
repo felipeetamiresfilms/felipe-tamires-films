@@ -96,3 +96,4 @@ docs/
 
 Ainda **não** implementado: CRUD, upload/Storage, player real, integrações com
 provedores de vídeo, PIN, e-mails.
+# felipe-tamires-films

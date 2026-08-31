@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listPortfolioEvents } from "@/lib/portfolio";
+import { WHATSAPP_MESSAGES } from "@/config/site";
 import { EventCard } from "@/components/public/EventCard";
+import { ContactBanner } from "@/components/public/ContactBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,13 @@ export default async function FilmesPage() {
           </Link>
           .
         </p>
+
+        <ContactBanner
+          title="Quer um filme assim para a sua história?"
+          text="Cada evento tem o seu ritmo e as suas pessoas. Se vocês estão planejando o de vocês, a gente quer conhecer."
+          message={WHATSAPP_MESSAGES.filmsLibrary}
+          ctaLabel="Converse com a gente"
+        />
       </div>
     </section>
   );

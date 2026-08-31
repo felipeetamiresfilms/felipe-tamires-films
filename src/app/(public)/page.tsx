@@ -1,24 +1,35 @@
+import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getPortfolioHome, type PublicPortfolioCard } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
 import { formatEventDate } from "@/lib/format";
+import {
+  WHATSAPP_MESSAGES,
+  heroFeaturedWhatsAppMessage,
+} from "@/config/site";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { EventCard } from "@/components/public/EventCard";
+import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
+import { HomeValueSection } from "@/components/public/HomeValueSection";
+import { HomeAboutSection } from "@/components/public/HomeAboutSection";
+import { ContactBanner } from "@/components/public/ContactBanner";
+import { ctaPrimaryClass } from "@/components/public/cta";
 
 // Lê o portfólio ao vivo (service_role) e assina URLs de capa — renderiza
 // a cada request, sem snapshot em build. Zero iframe: só imagens.
 export const dynamic = "force-dynamic";
 
-const primaryCta =
-  "inline-flex items-center gap-3 rounded-full bg-brass px-7 py-3.5 text-sm font-medium uppercase tracking-[0.22em] text-ink transition-colors hover:bg-brass-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60";
-const ghostCta =
-  "inline-flex items-center gap-3 rounded-full border border-brass/50 px-7 py-3.5 text-sm font-medium uppercase tracking-[0.22em] text-bone transition-colors hover:border-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60";
-
 // Largura do card nas fileiras: mostra o próximo card "espiando" no mobile,
 // cresce por breakpoint até telas grandes (não fica minúsculo no 4K).
 const rowCard =
   "flex-none snap-start w-[78vw] sm:w-[44vw] md:w-[19rem] lg:w-[21rem] xl:w-[23rem] 2xl:w-[25rem]";
+
+const CATEGORY_ANCHOR: Record<string, string> = {
+  weddings: "casamentos",
+  debuts: "quinze-anos",
+  events: "eventos",
+};
 
 function AbstractBackdrop() {
   return (
@@ -36,28 +47,17 @@ function AbstractBackdrop() {
   );
 }
 
-function Row({
-  id,
-  title,
-  events,
-}: {
-  id?: string;
-  title: string;
-  events: PublicPortfolioCard[];
-}) {
+type RowSpec = { key: string; id?: string; title: string; events: PublicPortfolioCard[] };
+
+function Row({ id, title, events }: Omit<RowSpec, "key">) {
   if (events.length === 0) return null;
   return (
     <section id={id} className="flex scroll-mt-10 flex-col gap-5">
-      <h2 className="px-6 text-xs uppercase tracking-[0.32em] text-brass sm:px-8">
-        {title}
-      </h2>
-      <div className="flex snap-x gap-4 overflow-x-auto px-6 pb-3 pr-10 sm:px-8 sm:pr-12 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <h2 className="text-xs uppercase tracking-[0.32em] text-brass">{title}</h2>
+      {/* fileira sangra até a borda da coluna e volta a alinhar no 1º card */}
+      <div className="-mx-6 flex snap-x gap-4 overflow-x-auto px-6 pb-3 pr-10 sm:-mx-8 sm:px-8 sm:pr-12 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {events.map((event) => (
-          <EventCard
-            key={event.publicSlug}
-            event={event}
-            className={rowCard}
-          />
+          <EventCard key={event.publicSlug} event={event} className={rowCard} />
         ))}
       </div>
     </section>
@@ -66,9 +66,21 @@ function Row({
 
 export default async function HomePage() {
   const { hero, spotlight, categories, recent } = await getPortfolioHome();
-  const showRecent = recent.length >= 2;
-  const hasCatalog =
-    spotlight.length > 0 || categories.length > 0 || showRecent;
+
+  const rows: RowSpec[] = [
+    ...(spotlight.length
+      ? [{ key: "spotlight", title: "Em destaque", events: spotlight }]
+      : []),
+    ...categories.map((c) => ({
+      key: c.key,
+      id: CATEGORY_ANCHOR[c.key],
+      title: c.label,
+      events: c.events,
+    })),
+    ...(recent.length >= 2
+      ? [{ key: "recent", title: "Histórias recentes", events: recent }]
+      : []),
+  ];
 
   const heroMeta = hero
     ? [
@@ -79,12 +91,6 @@ export default async function HomePage() {
         .filter(Boolean)
         .join(" · ")
     : "";
-
-  const categoryAnchor: Record<string, string> = {
-    weddings: "casamentos",
-    debuts: "quinze-anos",
-    events: "eventos",
-  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -128,16 +134,21 @@ export default async function HomePage() {
                   {hero.description}
                 </p>
               ) : null}
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Link href={`/filmes/${hero.publicSlug}`} className={primaryCta}>
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
+                <Link
+                  href={`/filmes/${hero.publicSlug}`}
+                  className={ctaPrimaryClass}
+                >
                   <span aria-hidden="true" className="text-base leading-none">
                     ▶
                   </span>
                   Conhecer esta história
                 </Link>
-                <Link href={`/filmes/${hero.publicSlug}`} className={ghostCta}>
-                  Ver detalhes
-                </Link>
+                <WhatsAppCTA
+                  message={heroFeaturedWhatsAppMessage(hero.title)}
+                  label="Quero um filme assim"
+                  variant="secondary"
+                />
               </div>
             </div>
           </div>
@@ -157,44 +168,43 @@ export default async function HomePage() {
               Casamentos, 15 anos e eventos transformados em cinema — para
               reviver quantas vezes quiser.
             </p>
-            <Link href="/filmes" className={ghostCta}>
-              Explorar nossos filmes
-            </Link>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <Link href="/filmes" className={ctaPrimaryClass}>
+                Explorar nossos filmes
+              </Link>
+              <WhatsAppCTA
+                message={WHATSAPP_MESSAGES.homeGeneric}
+                label="Falar com Felipe & Tamires"
+                variant="secondary"
+              />
+            </div>
           </div>
         </section>
       )}
 
-      {/* --- Catálogo em fileiras --- */}
-      {hasCatalog ? (
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 py-14 sm:gap-16 sm:py-16 2xl:max-w-[88rem]">
-          <Row title="Em destaque" events={spotlight} />
-
-          {categories.map((category) => (
-            <Row
-              key={category.key}
-              id={categoryAnchor[category.key]}
-              title={category.label}
-              events={category.events}
-            />
+      {/* --- Catálogo + blocos de conversão --- */}
+      <div className="mx-auto w-full max-w-6xl px-6 sm:px-8 2xl:max-w-[88rem]">
+        <div className="flex flex-col gap-16 py-16 sm:gap-24 sm:py-24">
+          {rows.map((row, i) => (
+            <Fragment key={row.key}>
+              <Row id={row.id} title={row.title} events={row.events} />
+              {i === 0 ? <HomeValueSection /> : null}
+            </Fragment>
           ))}
+          {rows.length === 0 ? <HomeValueSection /> : null}
 
-          {showRecent ? (
-            <Row title="Histórias recentes" events={recent} />
-          ) : null}
+          <HomeAboutSection />
 
-          <div className="flex flex-col items-center gap-4 px-6 pt-4 text-center sm:px-8">
-            <p className="font-display font-light italic text-brass-soft [font-size:clamp(1.35rem,2.4vw,2rem)]">
-              Casamentos · 15 Anos · Eventos
-            </p>
-            <Link
-              href="/filmes"
-              className="rounded-full border border-brass/50 px-7 py-3 text-sm font-medium uppercase tracking-[0.22em] text-bone transition-colors hover:border-brass"
-            >
-              Ver todos os filmes
-            </Link>
-          </div>
+          <ContactBanner
+            eyebrow="Vamos conversar"
+            title="Está planejando o seu evento?"
+            text="Conte pra gente o que estão preparando. A gente quer entender a história, o local, a data e o que vocês imaginam para esse dia."
+            message={WHATSAPP_MESSAGES.planningEvent}
+            ctaLabel="Falar com Felipe & Tamires"
+            secondary={{ label: "Ver todos os filmes", href: "/filmes" }}
+          />
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

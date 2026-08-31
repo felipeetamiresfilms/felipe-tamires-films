@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -38,11 +36,13 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${fraunces.variable} ${inter.variable} h-full`}
     >
-      <body className="flex min-h-full flex-col antialiased">
-        <SiteHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <SiteFooter />
-      </body>
+      {/*
+        O chrome (header/footer) vive nos layouts de cada área, não aqui:
+          (public)/layout.tsx  -> header comercial + rodapé
+          assistir/layout.tsx  -> só a marca, discreta
+          backstage-ft/layout.tsx -> sem chrome público (nav admin própria)
+      */}
+      <body className="flex min-h-full flex-col antialiased">{children}</body>
     </html>
   );
 }

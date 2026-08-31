@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
+import { WHATSAPP_MESSAGES } from "@/config/site";
 
 /**
  * Cabeçalho público. Navegação enxuta: descobrir os filmes e um ponteiro
@@ -37,6 +39,12 @@ export function SiteHeader() {
           >
             15 anos
           </Link>
+          <WhatsAppCTA
+            variant="link"
+            message={WHATSAPP_MESSAGES.header}
+            label="Falar conosco"
+            className="text-brass-soft transition-colors hover:text-brass"
+          />
           <span
             className="cursor-default text-bone-dim/45"
             title="Use o link privado que a Felipe & Tamires Films enviou para você"

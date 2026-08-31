@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { getPortfolioEvent } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
 import { formatEventDate } from "@/lib/format";
+import { portfolioEventWhatsAppMessage } from "@/config/site";
 import { CoverImage } from "@/components/watch/CoverImage";
 import { WatchClient } from "@/components/watch/WatchClient";
+import { ContactBanner } from "@/components/public/ContactBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -73,20 +75,31 @@ export default async function PortfolioEventPage({
     null;
 
   return (
-    <WatchClient
-      displayTitle={displayTitle}
-      metaLine={metaLine}
-      eyebrow="Felipe & Tamires Films"
-      heroDescription={event.description}
-      tagline=""
-      collectionLabel="Assista"
-      cover={
-        event.coverUrl ? (
-          <CoverImage url={event.coverUrl} alt={`Capa de ${displayTitle}`} />
-        ) : null
-      }
-      videos={event.videos}
-      primaryVideoId={primaryVideoId}
-    />
+    <>
+      <WatchClient
+        displayTitle={displayTitle}
+        metaLine={metaLine}
+        eyebrow="Felipe & Tamires Films"
+        heroDescription={event.description}
+        tagline=""
+        collectionLabel="Assista"
+        cover={
+          event.coverUrl ? (
+            <CoverImage url={event.coverUrl} alt={`Capa de ${displayTitle}`} />
+          ) : null
+        }
+        videos={event.videos}
+        primaryVideoId={primaryVideoId}
+      />
+
+      <div className="mx-auto w-full max-w-6xl px-6 pb-20 sm:px-8 2xl:max-w-[88rem]">
+        <ContactBanner
+          title="Imaginou a sua história contada assim?"
+          text="Cada evento tem seu próprio ritmo, suas pessoas e sua história. Se vocês estão planejando o de vocês, a gente quer conhecer."
+          message={portfolioEventWhatsAppMessage(event.eventType, event.title)}
+          ctaLabel="Quero conversar com vocês"
+        />
+      </div>
+    </>
   );
 }

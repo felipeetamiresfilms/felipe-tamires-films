@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+  Felipe & Tamires Films — sistema visual
+  Estética: cinema, luxo discreto, fotografia, memória.
+  Comprometido com tema escuro (sem alternância de tema nesta fase).
+*/
+
+@theme {
+  /* superfícies — pretos quentes, não neutros */
+  --color-ink: #0a0908;
+  --color-surface: #12100e;
+  --color-raised: #1a1613;
+
+  /* texto — marfim / osso, evocando papel e luz */
+  --color-bone: #f3eee4;
+  --color-bone-dim: #a49c8f;
+
+  /* traços e detalhes */
+  --color-hairline: #26221c;
+
+  /* acento metálico discreto (latão) — usar com parcimônia */
+  --color-brass: #c3a06a;
+  --color-brass-soft: #d8bd93;
+
+  /* tipografia */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* reserva a calha da barra de rolagem: abrir o player (que trava o scroll
+     do body) não faz o conteúdo "pular" na horizontal. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* grão de filme — textura sutil sobre toda a página */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* vinheta cinematográfica — escurece levemente as bordas da tela */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+/* conteúdo acima das camadas decorativas */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+::selection {
+  background: var(--color-brass);
+  color: var(--color-ink);
+}
+
+/* animação discreta de entrada */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.7s cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* fade do overlay do player — aplicado via `motion-safe:` (já respeita
+   prefers-reduced-motion), então o keyframe fica no nível de topo. */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

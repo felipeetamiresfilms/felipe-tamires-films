@@ -22,11 +22,15 @@ import {
 import { SubmitButton } from "@/components/backstage/SubmitButton";
 import {
   archiveEventAction,
+  moveShowcaseVideoAction,
   moveVideoAction,
   publishEventAction,
   removeCoverAction,
   restoreEventAction,
   setCoverAction,
+  setFeaturedAction,
+  setPortfolioAction,
+  setVideoShowcaseAction,
 } from "../actions";
 
 export const metadata = { title: "Evento" };
@@ -51,6 +55,21 @@ export default async function EventDetailPage({
   const isDraft = event.status === "draft";
   const isArchived = event.status === "archived";
   const noVideos = event.videos.length === 0;
+
+  // --- Portfólio público ---
+  const showcaseVideos = event.videos
+    .filter((v) => v.showcaseEnabled)
+    .sort((a, b) => a.showcaseOrder - b.showcaseOrder);
+  const showcaseIndexById = new Map(
+    showcaseVideos.map((v, i) => [v.id, i] as const),
+  );
+  const hasPublicVideo = showcaseVideos.some((v) => v.status === "published");
+  // Efetivamente visível em /filmes só quando TODAS as regras batem.
+  const portfolioLive =
+    isPublished &&
+    event.isPublic &&
+    Boolean(event.publicSlug) &&
+    hasPublicVideo;
 
   // Preview da capa: signed URL curta gerada pela sessão do admin (SELECT via RLS).
   let coverPreviewUrl: string | null = null;
@@ -244,18 +263,145 @@ export default async function EventDetailPage({
           </p>
         ) : null}
 
-        {/* Link de entrega */}
-        <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-6">
-          <h2 className="text-xs uppercase tracking-[0.28em] text-bone-dim">
-            Link do cliente
-          </h2>
-          {isPublished ? (
-            <CopyLinkButton path={`/assistir/${event.slug}`} />
-          ) : (
-            <p className="text-sm text-bone-dim">
-              Disponível quando o evento estiver publicado. Slug:{" "}
-              <code className="text-bone-dim">/assistir/{event.slug}</code>
+        {/* Dois endereços, propósitos diferentes */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Entrega privada */}
+          <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-6">
+            <h2 className="text-xs uppercase tracking-[0.28em] text-bone-dim">
+              Entrega privada
+            </h2>
+            <p className="text-xs text-bone-dim/80">
+              Link secreto do cliente — não indexável.
             </p>
+            {isPublished ? (
+              <CopyLinkButton path={`/assistir/${event.slug}`} />
+            ) : (
+              <p className="text-sm text-bone-dim">
+                Disponível quando o evento estiver publicado.
+              </p>
+            )}
+          </div>
+
+          {/* Portfólio público */}
+          <div className="flex flex-col gap-3 rounded-xl border border-brass/30 bg-raised/40 p-6">
+            <h2 className="text-xs uppercase tracking-[0.28em] text-brass">
+              Portfólio público
+            </h2>
+            <p className="text-xs text-bone-dim/80">
+              Página de divulgação — indexável, sem dados do cliente.
+            </p>
+            {portfolioLive && event.publicSlug ? (
+              <div className="flex flex-col gap-3">
+                <CopyLinkButton path={`/filmes/${event.publicSlug}`} />
+                <a
+                  href={`/filmes/${event.publicSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={subtleButtonClass}
+                >
+                  Abrir portfólio
+                </a>
+              </div>
+            ) : (
+              <p className="text-sm text-bone-dim">
+                {event.isPublic
+                  ? "Faltam condições para aparecer em /filmes (ver seção abaixo)."
+                  : "Ative o evento no portfólio na seção abaixo."}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Portfólio público — ativação + destaque */}
+        <div className="flex flex-col gap-4 rounded-xl border border-hairline bg-surface p-6">
+          <h2 className="text-xs uppercase tracking-[0.28em] text-bone-dim">
+            Exibir no portfólio
+          </h2>
+
+          {!event.isPublic ? (
+            <>
+              <p className="text-sm leading-relaxed text-bone-dim">
+                Ative somente quando houver autorização para utilizar este
+                evento como portfólio e divulgação da Felipe &amp; Tamires
+                Films.
+              </p>
+              <form
+                action={setPortfolioAction}
+                className="flex flex-col gap-3"
+              >
+                <input type="hidden" name="eventId" value={event.id} />
+                <input type="hidden" name="enable" value="true" />
+                <label className="flex items-start gap-3 text-sm leading-relaxed text-bone">
+                  <input
+                    type="checkbox"
+                    name="confirm"
+                    required
+                    className="mt-1 size-4 shrink-0 accent-brass"
+                  />
+                  <span>
+                    Confirmo que este evento possui autorização para utilização
+                    do conteúdo no portfólio e divulgação da Felipe &amp;
+                    Tamires Films.
+                  </span>
+                </label>
+                <SubmitButton variant="subtle" pendingLabel="Ativando…">
+                  Ativar portfólio
+                </SubmitButton>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center rounded-full border border-brass/50 bg-raised/60 px-3 py-1 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-brass-soft">
+                  Portfólio ativo
+                </span>
+                {event.publicSlug ? (
+                  <code className="text-xs text-bone-dim">
+                    /filmes/{event.publicSlug}
+                  </code>
+                ) : null}
+              </div>
+
+              {!isPublished ? (
+                <p className="rounded-lg border border-brass/40 bg-raised/60 px-4 py-3 text-sm text-brass-soft">
+                  Publique o evento para ele aparecer no portfólio.
+                </p>
+              ) : null}
+              {!hasPublicVideo ? (
+                <p className="rounded-lg border border-brass/40 bg-raised/60 px-4 py-3 text-sm text-brass-soft">
+                  Nenhum vídeo deste evento está liberado para o portfólio.
+                </p>
+              ) : null}
+              {!event.coverImagePath ? (
+                <p className="rounded-lg border border-hairline bg-raised/40 px-4 py-3 text-sm text-bone-dim">
+                  Este evento ficará melhor no portfólio com uma capa.
+                </p>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3 pt-1">
+                <form action={setFeaturedAction}>
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <input
+                    type="hidden"
+                    name="featured"
+                    value={event.portfolioFeatured ? "false" : "true"}
+                  />
+                  <SubmitButton variant="subtle" pendingLabel="Salvando…">
+                    {event.portfolioFeatured
+                      ? "Remover destaque da home"
+                      : "Destacar na home"}
+                  </SubmitButton>
+                </form>
+
+                <form action={setPortfolioAction}>
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <input type="hidden" name="enable" value="false" />
+                  <SubmitButton variant="subtle" pendingLabel="Desativando…">
+                    Desativar portfólio
+                  </SubmitButton>
+                </form>
+              </div>
+            </>
           )}
         </div>
 
@@ -297,7 +443,7 @@ export default async function EventDetailPage({
                     key={video.id}
                     className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-5 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-3">
                         <span className="font-display text-sm tabular-nums text-bone-dim">
                           {String(index + 1).padStart(2, "0")}
@@ -309,6 +455,95 @@ export default async function EventDetailPage({
                       <p className="text-xs uppercase tracking-[0.16em] text-bone-dim">
                         {meta}
                       </p>
+
+                      {/* Portfólio público do vídeo */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <form action={setVideoShowcaseAction}>
+                          <input type="hidden" name="eventId" value={event.id} />
+                          <input
+                            type="hidden"
+                            name="videoId"
+                            value={video.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="enabled"
+                            value={video.showcaseEnabled ? "false" : "true"}
+                          />
+                          <button
+                            type="submit"
+                            className={
+                              video.showcaseEnabled
+                                ? "inline-flex min-h-9 items-center justify-center rounded-full border border-brass/50 bg-raised/60 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-brass-soft transition-colors hover:border-brass"
+                                : subtleButtonClass
+                            }
+                          >
+                            {video.showcaseEnabled
+                              ? "✓ No portfólio"
+                              : "Exibir no portfólio"}
+                          </button>
+                        </form>
+
+                        {video.showcaseEnabled ? (
+                          <>
+                            <form action={moveShowcaseVideoAction}>
+                              <input
+                                type="hidden"
+                                name="eventId"
+                                value={event.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="videoId"
+                                value={video.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="up"
+                              />
+                              <button
+                                type="submit"
+                                disabled={
+                                  (showcaseIndexById.get(video.id) ?? 0) === 0
+                                }
+                                aria-label="Subir no portfólio"
+                                className={subtleButtonClass}
+                              >
+                                ↑
+                              </button>
+                            </form>
+                            <form action={moveShowcaseVideoAction}>
+                              <input
+                                type="hidden"
+                                name="eventId"
+                                value={event.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="videoId"
+                                value={video.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="down"
+                              />
+                              <button
+                                type="submit"
+                                disabled={
+                                  (showcaseIndexById.get(video.id) ?? 0) ===
+                                  showcaseVideos.length - 1
+                                }
+                                aria-label="Descer no portfólio"
+                                className={subtleButtonClass}
+                              >
+                                ↓
+                              </button>
+                            </form>
+                          </>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="flex shrink-0 flex-wrap items-center gap-2 self-start">

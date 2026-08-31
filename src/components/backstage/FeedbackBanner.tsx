@@ -17,12 +17,20 @@ const OK_MESSAGES: Record<string, string> = {
   "video-movido": "Ordem dos vídeos atualizada.",
   "capa-atualizada": "Capa atualizada.",
   "capa-removida": "Capa removida.",
+  "portfolio-ativado": "Evento ativado no portfólio público.",
+  "portfolio-desativado": "Evento removido do portfólio público.",
+  "destaque-ativado": "Evento marcado como destaque na home.",
+  "destaque-removido": "Destaque removido.",
+  "portfolio-video": "Seleção de vídeos do portfólio atualizada.",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
   estado: "Essa ação não vale para o status atual do evento.",
   publicar: "Não foi possível publicar: confira o cliente e o título.",
   capa: "Não foi possível enviar a capa. Use JPEG, PNG ou WEBP de até 10 MB.",
+  "portfolio-confirmar":
+    "Confirme a autorização de uso antes de ativar o portfólio.",
+  portfolio: "Não foi possível atualizar o portfólio. Tente de novo.",
   acao: "Não foi possível concluir a ação. Tente de novo.",
 };
 

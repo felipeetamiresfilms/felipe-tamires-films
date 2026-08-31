@@ -13,6 +13,14 @@ type Props = {
   cover: ReactNode;
   videos: WatchVideo[];
   primaryVideoId: string | null;
+  /** Frase do hero (privado: "Reviva esse dia."). "" oculta. */
+  tagline?: string;
+  /** Parágrafo opcional no hero (ex.: descrição do evento no portfólio). */
+  heroDescription?: string | null;
+  /** Título da seção de vídeos (privado: "Seus filmes"). */
+  collectionLabel?: string;
+  /** Rótulo da tarja do hero (privado: "Filme do evento"). */
+  eyebrow?: string;
 };
 
 export function WatchClient({
@@ -21,6 +29,10 @@ export function WatchClient({
   cover,
   videos,
   primaryVideoId,
+  tagline = "Reviva esse dia.",
+  heroDescription = null,
+  collectionLabel = "Seus filmes",
+  eyebrow = "Filme do evento",
 }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -72,7 +84,7 @@ export function WatchClient({
 
         <div className="relative mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-20 2xl:max-w-[88rem]">
           <div className="flex max-w-3xl flex-col gap-5">
-            <Badge>Filme do evento</Badge>
+            <Badge>{eyebrow}</Badge>
             <h1 className="font-display font-light leading-[1.03] text-bone [font-size:clamp(2.5rem,7vw,6.5rem)]">
               {displayTitle}
             </h1>
@@ -81,9 +93,16 @@ export function WatchClient({
                 {metaLine}
               </p>
             ) : null}
-            <p className="font-display font-light italic text-brass-soft [font-size:clamp(1.5rem,2.6vw,2.25rem)]">
-              Reviva esse dia.
-            </p>
+            {heroDescription ? (
+              <p className="max-w-xl text-sm leading-relaxed text-bone-dim sm:text-base">
+                {heroDescription}
+              </p>
+            ) : null}
+            {tagline ? (
+              <p className="font-display font-light italic text-brass-soft [font-size:clamp(1.5rem,2.6vw,2.25rem)]">
+                {tagline}
+              </p>
+            ) : null}
 
             {primary ? (
               <div className="pt-2">
@@ -107,7 +126,7 @@ export function WatchClient({
       <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-20 2xl:max-w-[88rem]">
         <div className="flex flex-col gap-10">
           <h2 className="text-xs uppercase tracking-[0.32em] text-brass">
-            Seus filmes
+            {collectionLabel}
           </h2>
 
           {videos.length === 0 ? (

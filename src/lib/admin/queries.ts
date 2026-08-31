@@ -258,6 +258,9 @@ export interface AdminVideoItem {
   duration: number | null;
   sortOrder: number;
   status: PublishStatus;
+  /** Portfólio público (Etapa 6). */
+  showcaseEnabled: boolean;
+  showcaseOrder: number;
 }
 
 export interface AdminEventDetail {
@@ -274,6 +277,10 @@ export interface AdminEventDetail {
   clientName: string;
   /** Caminho do objeto da capa no bucket `event-media` (não é URL). */
   coverImagePath: string | null;
+  /** Portfólio público (Etapa 6). */
+  isPublic: boolean;
+  publicSlug: string | null;
+  portfolioFeatured: boolean;
   videos: AdminVideoItem[];
 }
 
@@ -290,6 +297,8 @@ interface AdminVideoRow {
   duration_seconds: number | null;
   sort_order: number;
   status: string;
+  showcase_enabled: boolean;
+  showcase_order: number;
 }
 
 function toAdminVideo(row: AdminVideoRow): AdminVideoItem {
@@ -306,11 +315,13 @@ function toAdminVideo(row: AdminVideoRow): AdminVideoItem {
     duration: row.duration_seconds,
     sortOrder: row.sort_order,
     status: row.status as PublishStatus,
+    showcaseEnabled: row.showcase_enabled ?? false,
+    showcaseOrder: row.showcase_order ?? 0,
   };
 }
 
 const VIDEO_COLUMNS =
-  "id, title, description, category, provider, provider_video_id, embed_url, download_url, thumbnail_url, duration_seconds, sort_order, status";
+  "id, title, description, category, provider, provider_video_id, embed_url, download_url, thumbnail_url, duration_seconds, sort_order, status, showcase_enabled, showcase_order";
 
 export async function getAdminEventDetail(
   id: string,
@@ -322,7 +333,7 @@ export async function getAdminEventDetail(
   const { data, error } = await supabase
     .from("events")
     .select(
-      `id, title, slug, description, event_type, event_date, location, status, created_at, client_id, cover_image_url, clients(display_name), videos(${VIDEO_COLUMNS})`,
+      `id, title, slug, description, event_type, event_date, location, status, created_at, client_id, cover_image_url, is_public, public_slug, portfolio_featured, clients(display_name), videos(${VIDEO_COLUMNS})`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -342,6 +353,9 @@ export async function getAdminEventDetail(
     created_at: string;
     client_id: string;
     cover_image_url: string | null;
+    is_public: boolean;
+    public_slug: string | null;
+    portfolio_featured: boolean;
     clients: { display_name: string } | { display_name: string }[] | null;
     videos: AdminVideoRow[] | null;
   };
@@ -364,6 +378,9 @@ export async function getAdminEventDetail(
     clientId: row.client_id,
     clientName: client?.display_name ?? "—",
     coverImagePath: row.cover_image_url,
+    isPublic: row.is_public ?? false,
+    publicSlug: row.public_slug,
+    portfolioFeatured: row.portfolio_featured ?? false,
     videos,
   };
 }

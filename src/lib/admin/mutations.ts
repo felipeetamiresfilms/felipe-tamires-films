@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createServerAuthClient } from "@/lib/supabase/server";
-import { buildEventSlug } from "@/lib/admin/slug";
+import { buildEventSlug, slugifyTitle } from "@/lib/admin/slug";
 import type { ClientInput, EventInput } from "@/lib/admin/validation";
 import type { PublishStatus } from "@/types";
 
@@ -143,16 +143,22 @@ export interface EventStatusRow {
   videoCount: number;
   /** Caminho do objeto da capa no bucket `event-media` (ou `null`). */
   coverImagePath: string | null;
+  /** Portfólio público (Etapa 6). */
+  isPublic: boolean;
+  publicSlug: string | null;
+  portfolioFeatured: boolean;
 }
 
-/** Lê o mínimo para transições de status e gerência da capa. */
+/** Lê o mínimo para transições de status, capa e portfólio. */
 export async function getEventStatusRow(
   id: string,
 ): Promise<EventStatusRow | null> {
   const supabase = await createServerAuthClient();
   const { data, error } = await supabase
     .from("events")
-    .select("id, title, status, client_id, cover_image_url, videos(count)")
+    .select(
+      "id, title, status, client_id, cover_image_url, is_public, public_slug, portfolio_featured, videos(count)",
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -165,6 +171,9 @@ export async function getEventStatusRow(
     status: string;
     client_id: string;
     cover_image_url: string | null;
+    is_public: boolean;
+    public_slug: string | null;
+    portfolio_featured: boolean;
     videos: { count: number }[] | null;
   };
 
@@ -175,6 +184,9 @@ export async function getEventStatusRow(
     clientId: row.client_id,
     videoCount: row.videos?.[0]?.count ?? 0,
     coverImagePath: row.cover_image_url,
+    isPublic: row.is_public ?? false,
+    publicSlug: row.public_slug,
+    portfolioFeatured: row.portfolio_featured ?? false,
   };
 }
 
@@ -209,6 +221,170 @@ export async function setEventStatus(
 
   if (error) throw error;
   if (!data) throw new Error("event_not_found");
+}
+
+// --- Portfólio público (Etapa 6) ---------------------------------
+
+/**
+ * `public_slug` legível, único e ESTÁVEL. Sem entropia (não é segredo).
+ * Reaproveita `slugifyTitle` (NFD, sem acento, [a-z0-9-], até 40 chars,
+ * fallback "evento"). Colisão -> sufixo determinístico `-2`, `-3`, ...
+ * NUNCA usa o slug privado como base.
+ */
+export async function generatePublicSlug(title: string): Promise<string> {
+  const supabase = await createServerAuthClient();
+  const base = slugifyTitle(title);
+
+  for (let i = 0; i < 50; i += 1) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`;
+    const { data, error } = await supabase
+      .from("events")
+      .select("id")
+      .eq("public_slug", candidate)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return candidate;
+  }
+
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+/**
+ * Liga/desliga o evento no portfólio. `publicSlug` só é gravado quando
+ * passado (na 1ª ativação); depois nunca muda. Desativar mantém o slug.
+ */
+export async function setEventPublic(
+  id: string,
+  isPublic: boolean,
+  publicSlug: string | null,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const patch: Record<string, unknown> = { is_public: isPublic };
+  if (publicSlug !== null) patch.public_slug = publicSlug;
+
+  const { data, error } = await supabase
+    .from("events")
+    .update(patch)
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("event_not_found");
+}
+
+export async function setEventFeatured(
+  id: string,
+  featured: boolean,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("events")
+    .update({ portfolio_featured: featured })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("event_not_found");
+}
+
+/**
+ * Liga/desliga um vídeo no portfólio, confirmando que ele pertence ao evento.
+ * Ao ligar, o vídeo entra no fim da ordem do portfólio (`showcase_order`).
+ */
+export async function setVideoShowcase(
+  eventId: string,
+  videoId: string,
+  enabled: boolean,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const patch: Record<string, unknown> = { showcase_enabled: enabled };
+
+  if (enabled) {
+    const { data: last, error: lastError } = await supabase
+      .from("videos")
+      .select("showcase_order")
+      .eq("event_id", eventId)
+      .eq("showcase_enabled", true)
+      .order("showcase_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lastError) throw lastError;
+    patch.showcase_order = (last?.showcase_order ?? 0) + 1;
+  }
+
+  const { data, error } = await supabase
+    .from("videos")
+    .update(patch)
+    .eq("id", videoId)
+    .eq("event_id", eventId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("video_not_found");
+}
+
+/** Move um vídeo do portfólio uma posição, trocando `showcase_order` com o
+ *  vizinho (só entre os `showcase_enabled`). Mesma lógica de `moveVideoInEvent`. */
+export async function moveShowcaseVideoInEvent(
+  eventId: string,
+  videoId: string,
+  direction: "up" | "down",
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("videos")
+    .select("id, showcase_order, sort_order, created_at")
+    .eq("event_id", eventId)
+    .eq("showcase_enabled", true)
+    .order("showcase_order", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const rows = (data ?? []) as { id: string; showcase_order: number }[];
+  const index = rows.findIndex((r) => r.id === videoId);
+  if (index === -1) throw new Error("video_not_found");
+
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (target < 0 || target >= rows.length) return;
+
+  const current = rows[index];
+  const neighbour = rows[target];
+
+  if (current.showcase_order === neighbour.showcase_order) {
+    const reindexed = rows.map((r, i) => ({ id: r.id, order: i + 1 }));
+    [reindexed[index].order, reindexed[target].order] = [
+      reindexed[target].order,
+      reindexed[index].order,
+    ];
+    for (const item of reindexed) {
+      const { error: upErr } = await supabase
+        .from("videos")
+        .update({ showcase_order: item.order })
+        .eq("id", item.id)
+        .eq("event_id", eventId);
+      if (upErr) throw upErr;
+    }
+    return;
+  }
+
+  const swaps: Array<[string, number]> = [
+    [current.id, neighbour.showcase_order],
+    [neighbour.id, current.showcase_order],
+  ];
+  for (const [id, order] of swaps) {
+    const { error: upErr } = await supabase
+      .from("videos")
+      .update({ showcase_order: order })
+      .eq("id", id)
+      .eq("event_id", eventId);
+    if (upErr) throw upErr;
+  }
 }
 
 // --- Vídeos --------------------------------------------------------

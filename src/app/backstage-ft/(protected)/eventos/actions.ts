@@ -19,12 +19,17 @@ import {
 } from "@/lib/admin/validation";
 import {
   clientExists,
+  generatePublicSlug,
   getEventStatusRow,
   insertEvent,
   insertVideo,
+  moveShowcaseVideoInEvent,
   moveVideoInEvent,
   setEventCoverPath,
+  setEventFeatured,
+  setEventPublic,
   setEventStatus,
+  setVideoShowcase,
   updateEvent,
   updateVideoInEvent,
   type VideoWriteFields,
@@ -527,6 +532,134 @@ export async function removeCoverAction(formData: FormData): Promise<void> {
   } catch (err) {
     if (isRedirectError(err)) throw err;
     console.error("removeCoverAction", err);
+    backToEvent(eventId, "erro=acao");
+  }
+}
+
+// --- Portfólio público (Etapa 6) --------------------------------
+
+/**
+ * Liga/desliga o evento no portfólio. Ativar exige a confirmação consciente
+ * de autorização (checkbox `confirm`). Na 1ª ativação gera `public_slug`;
+ * depois nunca regenera. Desativar mantém o slug (o endereço volta a valer
+ * se o evento for reativado).
+ */
+export async function setPortfolioAction(formData: FormData): Promise<void> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") redirect("/backstage-ft/login");
+
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!isUuid(eventId)) redirect("/backstage-ft/eventos");
+
+  const enable = String(formData.get("enable") ?? "") === "true";
+
+  try {
+    const event = await getEventStatusRow(eventId);
+    if (!event) redirect("/backstage-ft/eventos");
+
+    if (!enable) {
+      await setEventPublic(eventId, false, null);
+      revalidatePath("/backstage-ft", "layout");
+      backToEvent(eventId, "ok=portfolio-desativado");
+    }
+
+    if (formData.get("confirm") !== "on") {
+      backToEvent(eventId, "erro=portfolio-confirmar");
+    }
+
+    let publicSlug = event.publicSlug;
+    let slugToWrite: string | null = null;
+    if (!publicSlug) {
+      publicSlug = await generatePublicSlug(event.title);
+      slugToWrite = publicSlug;
+    }
+
+    try {
+      await setEventPublic(eventId, true, slugToWrite);
+    } catch (err) {
+      // Corrida rara no public_slug: gera outro candidato e tenta mais uma vez.
+      const code =
+        typeof err === "object" && err !== null
+          ? (err as { code?: string }).code
+          : undefined;
+      if (code !== "23505" || !slugToWrite) throw err;
+      const retry = await generatePublicSlug(
+        `${event.title}-${Date.now().toString(36)}`,
+      );
+      await setEventPublic(eventId, true, retry);
+    }
+
+    revalidatePath("/backstage-ft", "layout");
+    backToEvent(eventId, "ok=portfolio-ativado");
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error("setPortfolioAction", err);
+    backToEvent(eventId, "erro=portfolio");
+  }
+}
+
+export async function setFeaturedAction(formData: FormData): Promise<void> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") redirect("/backstage-ft/login");
+
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!isUuid(eventId)) redirect("/backstage-ft/eventos");
+
+  const featured = String(formData.get("featured") ?? "") === "true";
+
+  try {
+    await setEventFeatured(eventId, featured);
+    revalidatePath("/backstage-ft", "layout");
+    backToEvent(eventId, featured ? "ok=destaque-ativado" : "ok=destaque-removido");
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error("setFeaturedAction", err);
+    backToEvent(eventId, "erro=acao");
+  }
+}
+
+export async function setVideoShowcaseAction(formData: FormData): Promise<void> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") redirect("/backstage-ft/login");
+
+  const eventId = String(formData.get("eventId") ?? "");
+  const videoId = String(formData.get("videoId") ?? "");
+  if (!isUuid(eventId) || !isUuid(videoId)) redirect("/backstage-ft/eventos");
+
+  const enabled = String(formData.get("enabled") ?? "") === "true";
+
+  try {
+    await setVideoShowcase(eventId, videoId, enabled);
+    revalidatePath("/backstage-ft", "layout");
+    backToEvent(eventId, "ok=portfolio-video");
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error("setVideoShowcaseAction", err);
+    backToEvent(eventId, "erro=acao");
+  }
+}
+
+export async function moveShowcaseVideoAction(
+  formData: FormData,
+): Promise<void> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") redirect("/backstage-ft/login");
+
+  const eventId = String(formData.get("eventId") ?? "");
+  const videoId = String(formData.get("videoId") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  if (!isUuid(eventId)) redirect("/backstage-ft/eventos");
+  if (!isUuid(videoId) || (direction !== "up" && direction !== "down")) {
+    backToEvent(eventId, "erro=acao");
+  }
+
+  try {
+    await moveShowcaseVideoInEvent(eventId, videoId, direction as "up" | "down");
+    revalidatePath("/backstage-ft", "layout");
+    backToEvent(eventId, "ok=portfolio-video");
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error("moveShowcaseVideoAction", err);
     backToEvent(eventId, "erro=acao");
   }
 }

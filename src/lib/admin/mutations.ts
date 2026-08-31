@@ -56,6 +56,50 @@ export async function updateClient(
   if (!data) throw new Error("client_not_found");
 }
 
+/**
+ * Portal do cliente (Etapa 8): grava só o HASH do token (nunca o token puro),
+ * marca a data e liga o portal. Regenerar chama isto de novo — o hash antigo
+ * é substituído, então o link anterior para de funcionar na hora.
+ */
+export async function setClientPortalToken(
+  id: string,
+  tokenHash: string,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("clients")
+    .update({
+      portal_token_hash: tokenHash,
+      portal_token_created_at: new Date().toISOString(),
+      portal_enabled: true,
+    })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("client_not_found");
+}
+
+/** Liga/desliga o portal. Desligar mantém o hash — reativar exige token novo. */
+export async function setClientPortalEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("clients")
+    .update({ portal_enabled: enabled })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("client_not_found");
+}
+
 // --- Eventos --------------------------------------------------------
 
 /** Confere que o cliente existe (FK + integridade antes de gravar o evento). */

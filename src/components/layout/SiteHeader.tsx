@@ -47,7 +47,7 @@ export function SiteHeader() {
           />
           <span
             className="cursor-default text-bone-dim/45"
-            title="Use o link privado que a Felipe & Tamires Films enviou para você"
+            title="Acesse pelo link privado que a Felipe & Tamires Films envia para você — não há login."
           >
             Acessar meus filmes
           </span>

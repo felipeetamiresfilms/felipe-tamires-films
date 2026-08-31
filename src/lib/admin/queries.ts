@@ -410,3 +410,53 @@ export async function getAdminVideoInEvent(
 
   return toAdminVideo(data as unknown as AdminVideoRow);
 }
+
+// --- Portal do cliente (Etapa 8) --------------------------------------
+
+export interface ClientPortalState {
+  /** Já existe um `portal_token_hash`. */
+  created: boolean;
+  /** `portal_enabled` — o link está valendo. */
+  enabled: boolean;
+  createdAt: string | null;
+}
+
+/**
+ * Estado do portal privado do cliente para o backstage.
+ * NUNCA devolve o hash — só flags. Se a migration da Etapa 8 ainda não foi
+ * aplicada (colunas ausentes -> 42703), devolve "não criado".
+ */
+export async function getClientPortalState(
+  id: string,
+): Promise<ClientPortalState> {
+  const empty: ClientPortalState = {
+    created: false,
+    enabled: false,
+    createdAt: null,
+  };
+  if (!isUuid(id)) return empty;
+
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("clients")
+    .select("portal_token_hash, portal_enabled, portal_token_created_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    if ((error as { code?: string }).code === "42703") return empty;
+    throw error;
+  }
+
+  const row = data as {
+    portal_token_hash: string | null;
+    portal_enabled: boolean | null;
+    portal_token_created_at: string | null;
+  } | null;
+
+  return {
+    created: Boolean(row?.portal_token_hash),
+    enabled: Boolean(row?.portal_enabled),
+    createdAt: row?.portal_token_created_at ?? null,
+  };
+}

@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAdminClientDetail } from "@/lib/admin/queries";
+import { getAdminClientDetail, getClientPortalState } from "@/lib/admin/queries";
 import { isUuid } from "@/lib/admin/validation";
 import { formatEventDate } from "@/lib/format";
 import { eventTypeLabels } from "@/lib/labels";
 import { FeedbackBanner } from "@/components/backstage/FeedbackBanner";
 import { StatusBadge } from "@/components/backstage/StatusBadge";
+import { ClientPortalAccess } from "@/components/backstage/ClientPortalAccess";
 import {
   ghostButtonClass,
   primaryButtonClass,
 } from "@/components/backstage/form-ui";
+import {
+  disableClientPortalAction,
+  issueClientPortalAction,
+} from "../actions";
 
 export const metadata = { title: "Cliente" };
 
@@ -23,8 +28,9 @@ export default async function ClientDetailPage({
   const { id } = await params;
   if (!isUuid(id)) notFound();
 
-  const [client, { ok }] = await Promise.all([
+  const [client, portal, { ok }] = await Promise.all([
     getAdminClientDetail(id),
+    getClientPortalState(id),
     searchParams,
   ]);
   if (!client) notFound();
@@ -69,6 +75,14 @@ export default async function ClientDetailPage({
             </div>
           </header>
         </div>
+
+        <ClientPortalAccess
+          clientId={client.id}
+          created={portal.created}
+          enabled={portal.enabled}
+          issueAction={issueClientPortalAction}
+          disableAction={disableClientPortalAction}
+        />
 
         <div className="flex flex-col gap-4">
           <h2 className="text-xs uppercase tracking-[0.28em] text-bone-dim">

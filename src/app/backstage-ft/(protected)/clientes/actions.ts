@@ -8,9 +8,17 @@ import {
   SESSION_EXPIRED_ERROR,
   zodFieldErrors,
   type FormState,
+  type PortalFormState,
 } from "@/lib/admin/form";
 import { clientInputSchema, isUuid } from "@/lib/admin/validation";
-import { insertClient, updateClient } from "@/lib/admin/mutations";
+import {
+  insertClient,
+  setClientPortalEnabled,
+  setClientPortalToken,
+  updateClient,
+} from "@/lib/admin/mutations";
+import { getClientPortalState } from "@/lib/admin/queries";
+import { generatePortalToken, hashPortalToken } from "@/lib/client-portal";
 
 function readClientForm(formData: FormData) {
   return clientInputSchema.safeParse({
@@ -82,4 +90,78 @@ export async function updateClientAction(
 
   revalidatePath("/backstage-ft", "layout");
   redirect(`/backstage-ft/clientes/${id}?ok=cliente-atualizado`);
+}
+
+// --- Portal do cliente (Etapa 8) --------------------------------------
+
+/**
+ * Cria OU regenera o acesso do cliente. Gera um token forte, grava só o
+ * hash e liga o portal; devolve o token EM MEMÓRIA (via `useActionState`)
+ * para o admin copiar UMA vez — nada é redirecionado nem persistido em
+ * texto puro. Regenerar (já existe hash) exige o checkbox `confirm`.
+ */
+export async function issueClientPortalAction(
+  _prev: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") {
+    return { ok: false, error: SESSION_EXPIRED_ERROR };
+  }
+
+  const id = String(formData.get("id") ?? "");
+  if (!isUuid(id)) {
+    return { ok: false, error: "Cliente inválido." };
+  }
+
+  let state;
+  try {
+    state = await getClientPortalState(id);
+  } catch (err) {
+    console.error("issueClientPortalAction/state", err);
+    return { ok: false, error: GENERIC_SAVE_ERROR };
+  }
+
+  if (state.created && formData.get("confirm") !== "on") {
+    return {
+      ok: false,
+      error: "Confirme a operação — o link atual deixará de funcionar na hora.",
+    };
+  }
+
+  const token = generatePortalToken();
+  try {
+    await setClientPortalToken(id, hashPortalToken(token));
+  } catch (err) {
+    console.error("issueClientPortalAction", err);
+    return { ok: false, error: GENERIC_SAVE_ERROR };
+  }
+
+  revalidatePath("/backstage-ft", "layout");
+  return { ok: true, token };
+}
+
+export async function disableClientPortalAction(
+  _prev: PortalFormState,
+  formData: FormData,
+): Promise<PortalFormState> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") {
+    return { ok: false, error: SESSION_EXPIRED_ERROR };
+  }
+
+  const id = String(formData.get("id") ?? "");
+  if (!isUuid(id)) {
+    return { ok: false, error: "Cliente inválido." };
+  }
+
+  try {
+    await setClientPortalEnabled(id, false);
+  } catch (err) {
+    console.error("disableClientPortalAction", err);
+    return { ok: false, error: GENERIC_SAVE_ERROR };
+  }
+
+  revalidatePath("/backstage-ft", "layout");
+  return { ok: true };
 }

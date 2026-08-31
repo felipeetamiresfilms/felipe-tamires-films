@@ -16,6 +16,18 @@ export type FormState = {
 
 export const EMPTY_FORM_STATE: FormState = { ok: false };
 
+/**
+ * Estado das ações do portal do cliente (Etapa 8). Carrega o `token` recém
+ * gerado — que só existe logo após criar/regenerar e NUNCA é persistido.
+ */
+export type PortalFormState = {
+  ok: boolean;
+  error?: string;
+  token?: string;
+};
+
+export const EMPTY_PORTAL_FORM_STATE: PortalFormState = { ok: false };
+
 /** Converte os `issues` do Zod em `{ campo: mensagem }` (primeira por campo). */
 export function zodFieldErrors(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

@@ -85,7 +85,7 @@ body > * {
   color: var(--color-ink);
 }
 
-/* animação discreta de entrada */
+/* animação discreta de entrada (backstage — pré-existente, não mexer) */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
     animation: rise 0.7s cubic-bezier(0.2, 0.6, 0.2, 1) both;
@@ -112,4 +112,230 @@ body > * {
   to {
     opacity: 1;
   }
+}
+
+/* ============================================================
+   MOTION DESIGN — camada cinematográfica (reveal, stagger, hero)
+
+   Princípios:
+   • Progressive enhancement — os estados "escondidos" só existem
+     sob <html class="js"> (definida inline, antes da 1ª pintura).
+     Sem JS, com JS quebrado (falha do bundle -> classe `no-reveal`)
+     ou com `prefers-reduced-motion`: o conteúdo aparece normalmente.
+   • Anima somente opacity / transform / filter.
+   • Durações e curva centralizadas nas custom properties abaixo.
+   ============================================================ */
+
+:root {
+  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+  --reveal-dur: 0.72s;
+  --reveal-shift: 22px;
+  --stagger-dur: 0.62s;
+  --kb-scale: 1.04;
+  --kb-dur: 18s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---- reveal de um bloco (títulos, parágrafos, CTAs) -------- */
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(var(--reveal-shift));
+    transition:
+      opacity var(--reveal-dur) var(--ease-cine),
+      transform var(--reveal-dur) var(--ease-cine),
+      filter var(--reveal-dur) var(--ease-cine);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  html.js [data-reveal="soft"] {
+    --reveal-shift: 14px;
+    filter: blur(2px);
+  }
+  html.js [data-reveal="image"] {
+    transform: scale(1.035);
+  }
+  html.js [data-reveal][data-inview] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* ---- reveal com stagger dos filhos diretos ---------------- */
+  html.js [data-reveal-stagger] > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--stagger-dur) var(--ease-cine),
+      transform var(--stagger-dur) var(--ease-cine);
+  }
+  html.js [data-reveal-stagger][data-inview] > * {
+    opacity: 1;
+    transform: none;
+  }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(2) { transition-delay: 70ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(3) { transition-delay: 140ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(4) { transition-delay: 210ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(5) { transition-delay: 280ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(6) { transition-delay: 350ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(7) { transition-delay: 400ms; }
+  html.js [data-reveal-stagger][data-inview] > *:nth-child(n + 8) { transition-delay: 440ms; }
+
+  /* fileiras horizontais: deslocamento menor (cabe no padding,
+     sem provocar barra de rolagem vertical transitória) */
+  html.js .cine-row[data-reveal-stagger] > * { transform: translateY(10px); }
+
+  /* ---- filete que se expande (proposta de valor) ----------- */
+  html.js [data-rule] {
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.7s var(--ease-cine) 0.2s;
+  }
+  html.js [data-inview] [data-rule],
+  html.js [data-rule][data-inview] {
+    transform: none;
+  }
+
+  /* ---- entrada de composição do hero (no load, só CSS) ----- */
+  html.js .cine-stack > * {
+    animation: cineRise 0.7s var(--ease-cine) both;
+  }
+  html.js .cine-stack > *:nth-child(1) { animation-delay: 0.02s; }
+  html.js .cine-stack > *:nth-child(2) { animation-delay: 0.1s; }
+  html.js .cine-stack > *:nth-child(3) { animation-delay: 0.24s; }
+  html.js .cine-stack > *:nth-child(4) { animation-delay: 0.36s; }
+  html.js .cine-stack > *:nth-child(5) { animation-delay: 0.46s; }
+  html.js .cine-stack > *:nth-child(6) { animation-delay: 0.56s; }
+
+  /* fundo institucional respirando bem devagar */
+  html.js .cine-breathe {
+    animation: cineBreathe 24s ease-in-out infinite alternate;
+  }
+
+  /* Ken Burns quase imperceptível — só escala, não mexe no LCP */
+  html.js .cine-kenburns {
+    animation: cineKenBurns var(--kb-dur) ease-out both;
+    transform-origin: 50% 45%;
+  }
+
+  /* fade discreto da capa (heros privados de /assistir) */
+  html.js .cine-cover-fade {
+    animation: cineFade 0.55s ease-out both;
+  }
+
+  /* telas grandes: hero um pouco mais perceptível */
+  @media (min-width: 1536px) {
+    html.js .cine-kenburns {
+      --kb-scale: 1.055;
+      --kb-dur: 20s;
+    }
+  }
+
+  /* mobile: intensidade menor */
+  @media (max-width: 640px) {
+    :root {
+      --reveal-shift: 15px;
+    }
+    html.js .cine-kenburns {
+      --kb-scale: 1.022;
+      --kb-dur: 22s;
+    }
+    html.js .cine-breathe {
+      animation-duration: 32s;
+    }
+  }
+}
+
+/* Falha do bundle JS: a classe `no-reveal` é adicionada pelo script
+   inline (ver layout) se o scanner nunca sinalizar que carregou. */
+html.no-reveal [data-reveal],
+html.no-reveal [data-reveal-stagger] > *,
+html.no-reveal [data-rule] {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+@keyframes cineRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cineBreathe {
+  from {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.045);
+  }
+}
+@keyframes cineKenBurns {
+  from {
+    transform: scale(1.002);
+  }
+  to {
+    transform: scale(var(--kb-scale));
+  }
+}
+@keyframes cineFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- microinteração: sublinhado dos links do header --------- */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.35em;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s var(--ease-cine);
+}
+.nav-underline:hover::after {
+  transform: scaleX(1);
+}
+/* foco: indicador imediato, sem animação (acessibilidade) */
+.nav-underline:focus-visible::after {
+  transform: scaleX(1);
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* sem crescimento animado — o sublinhado aparece instantâneo */
+  .nav-underline::after {
+    transition: none;
+  }
+}
+
+/* ---- fade sutil nas laterais das fileiras horizontais ------ */
+.edge-fade-x {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 2rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 2rem),
+    transparent 100%
+  );
 }

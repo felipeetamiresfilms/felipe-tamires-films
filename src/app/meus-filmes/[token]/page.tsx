@@ -29,7 +29,7 @@ function LibraryCard({ event }: { event: ClientLibraryEvent }) {
   return (
     <Link
       href={`/assistir/${event.privateSlug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition-colors duration-300 hover:border-brass/40 focus-visible:border-brass/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/50"
+      className="group flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition duration-300 ease-out hover:border-brass/40 focus-visible:border-brass/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/50 motion-safe:hover:-translate-y-1"
     >
       <div className="relative aspect-video w-full overflow-hidden">
         {event.coverUrl ? (
@@ -39,7 +39,7 @@ function LibraryCard({ event }: { event: ClientLibraryEvent }) {
             fill
             unoptimized
             sizes="(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="object-cover transition-transform duration-[450ms] ease-out group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div
@@ -85,7 +85,7 @@ export default async function ClientLibraryPage({
   return (
     <section className="mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-8 sm:py-24 2xl:max-w-[88rem]">
       <div className="flex flex-col gap-12">
-        <header className="flex max-w-2xl flex-col gap-4">
+        <header data-reveal-stagger className="flex max-w-2xl flex-col gap-4">
           <span className="text-xs uppercase tracking-[0.32em] text-brass">
             Felipe &amp; Tamires Films
           </span>
@@ -104,7 +104,10 @@ export default async function ClientLibraryPage({
             aparecem aqui.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            data-reveal-stagger
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {library.events.map((event) => (
               <LibraryCard key={event.privateSlug} event={event} />
             ))}

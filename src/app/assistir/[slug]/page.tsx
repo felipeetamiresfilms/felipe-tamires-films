@@ -63,7 +63,11 @@ export default async function WatchPage({
       metaLine={metaLine}
       cover={
         coverUrl ? (
-          <CoverImage url={coverUrl} alt={`Capa do filme de ${displayTitle}`} />
+          <CoverImage
+            url={coverUrl}
+            alt={`Capa do filme de ${displayTitle}`}
+            motion="fade"
+          />
         ) : null
       }
       videos={videos}

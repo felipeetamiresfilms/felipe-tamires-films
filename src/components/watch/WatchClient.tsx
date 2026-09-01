@@ -83,7 +83,7 @@ export function WatchClient({
         )}
 
         <div className="relative mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-20 2xl:max-w-[88rem]">
-          <div className="flex max-w-3xl flex-col gap-5">
+          <div className="cine-stack flex max-w-3xl flex-col gap-5">
             <Badge>{eyebrow}</Badge>
             <h1 className="font-display font-light leading-[1.03] text-bone [font-size:clamp(2.5rem,7vw,6.5rem)]">
               {displayTitle}
@@ -109,9 +109,12 @@ export function WatchClient({
                 <button
                   type="button"
                   onClick={(event) => open(primary, event.currentTarget)}
-                  className="inline-flex items-center gap-3 rounded-full bg-brass px-7 py-3.5 text-sm font-medium uppercase tracking-[0.22em] text-ink transition-colors hover:bg-brass-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60"
+                  className="group inline-flex items-center gap-3 rounded-full bg-brass px-7 py-3.5 text-sm font-medium uppercase tracking-[0.22em] text-ink transition duration-300 ease-out hover:bg-brass-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60 motion-safe:hover:-translate-y-px"
                 >
-                  <span aria-hidden="true" className="text-base leading-none">
+                  <span
+                    aria-hidden="true"
+                    className="text-base leading-none transition-transform duration-300 ease-out motion-safe:group-hover:translate-x-[2px]"
+                  >
                     ▶
                   </span>
                   Assistir ao filme
@@ -125,7 +128,10 @@ export function WatchClient({
       {/* Coleção */}
       <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-20 2xl:max-w-[88rem]">
         <div className="flex flex-col gap-10">
-          <h2 className="text-xs uppercase tracking-[0.32em] text-brass">
+          <h2
+            data-reveal="up"
+            className="text-xs uppercase tracking-[0.32em] text-brass"
+          >
             {collectionLabel}
           </h2>
 
@@ -136,10 +142,15 @@ export function WatchClient({
           ) : (
             <div className="flex flex-col gap-6">
               {feature ? (
-                <FilmCard video={feature} variant="feature" onOpen={open} />
+                <div data-reveal="up">
+                  <FilmCard video={feature} variant="feature" onOpen={open} />
+                </div>
               ) : null}
               {rest.length > 0 ? (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                <div
+                  data-reveal-stagger
+                  className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+                >
                   {rest.map((video) => (
                     <FilmCard key={video.id} video={video} onOpen={open} />
                   ))}

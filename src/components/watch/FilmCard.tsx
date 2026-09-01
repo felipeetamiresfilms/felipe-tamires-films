@@ -26,7 +26,7 @@ export function FilmCard({ video, variant = "default", onOpen }: Props) {
       aria-label={`Assistir: ${video.title}`}
       className={[
         "group block w-full overflow-hidden rounded-xl border border-hairline bg-surface text-left",
-        "transition-colors duration-300 hover:border-brass/40",
+        "transition duration-300 ease-out hover:border-brass/40 motion-safe:hover:-translate-y-1",
         "focus-visible:border-brass/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/50",
         isFeature ? "sm:grid sm:grid-cols-[1.5fr_1fr]" : "",
       ].join(" ")}
@@ -47,7 +47,7 @@ export function FilmCard({ video, variant = "default", onOpen }: Props) {
                 ? "(min-width: 640px) 55vw, 100vw"
                 : "(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
             }
-            className="object-cover"
+            className="object-cover transition-transform duration-[450ms] ease-out motion-safe:group-hover:scale-[1.035]"
             onError={() => setPosterFailed(true)}
           />
         ) : (

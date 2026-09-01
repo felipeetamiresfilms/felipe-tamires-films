@@ -9,8 +9,30 @@ import Image from "next/image";
  *
  * Server Component — passado como prop para <WatchClient> (que é client),
  * mantendo a imagem pesada fora do bundle de JS.
+ *
+ * `motion`:
+ *   - "kenburns": escala lentíssima (~18s), quase imperceptível — usada na
+ *     página pública de uma história. Não anima opacity, então não atrasa o LCP.
+ *   - "fade": fade discreto de entrada (~0.5s) — usada nas capas privadas.
+ *   - "none": sem animação.
+ * Todas respeitam prefers-reduced-motion (o CSS fica sob `no-preference`).
  */
-export function CoverImage({ url, alt }: { url: string; alt: string }) {
+export function CoverImage({
+  url,
+  alt,
+  motion = "none",
+}: {
+  url: string;
+  alt: string;
+  motion?: "kenburns" | "fade" | "none";
+}) {
+  const motionClass =
+    motion === "kenburns"
+      ? "cine-kenburns"
+      : motion === "fade"
+        ? "cine-cover-fade"
+        : "";
+
   return (
     <Image
       src={url}
@@ -19,7 +41,7 @@ export function CoverImage({ url, alt }: { url: string; alt: string }) {
       priority
       unoptimized
       sizes="100vw"
-      className="object-cover"
+      className={`object-cover ${motionClass}`.trim()}
     />
   );
 }

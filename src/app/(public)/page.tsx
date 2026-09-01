@@ -35,7 +35,7 @@ function AbstractBackdrop() {
   return (
     <div
       aria-hidden="true"
-      className="absolute inset-0"
+      className="cine-breathe absolute inset-0"
       style={{
         backgroundImage: [
           "radial-gradient(90% 60% at 20% 0%, rgba(216,189,147,0.16), transparent 60%)",
@@ -53,9 +53,16 @@ function Row({ id, title, events }: Omit<RowSpec, "key">) {
   if (events.length === 0) return null;
   return (
     <section id={id} className="flex scroll-mt-10 flex-col gap-5">
-      <h2 className="text-xs uppercase tracking-[0.32em] text-brass">{title}</h2>
+      <h2
+        data-reveal="up"
+        className="text-xs uppercase tracking-[0.32em] text-brass"
+      >
+        {title}
+      </h2>
       {/* fileira sangra até a borda da coluna e volta a alinhar no 1º card */}
-      <div className="-mx-6 flex snap-x gap-4 overflow-x-auto px-6 pb-3 pr-10 sm:-mx-8 sm:px-8 sm:pr-12 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        data-reveal-stagger
+        className="edge-fade-x cine-row -mx-6 flex snap-x gap-4 overflow-x-auto px-6 pb-3 pr-10 pt-2 sm:-mx-8 sm:px-8 sm:pr-12 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {events.map((event) => (
           <EventCard key={event.publicSlug} event={event} className={rowCard} />
         ))}
@@ -106,7 +113,7 @@ export default async function HomePage() {
                 priority
                 unoptimized
                 sizes="100vw"
-                className="object-cover"
+                className="cine-kenburns object-cover"
               />
               {/* overlays sutis — fotografia continua protagonista */}
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/5" />
@@ -116,8 +123,14 @@ export default async function HomePage() {
             <AbstractBackdrop />
           )}
 
+          {/* costura hero -> catálogo */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-ink"
+          />
+
           <div className="relative mx-auto w-full max-w-6xl px-6 py-14 sm:px-8 sm:py-16 2xl:max-w-[88rem]">
-            <div className="flex max-w-2xl flex-col gap-4">
+            <div className="cine-stack flex max-w-2xl flex-col gap-4">
               <span className="text-xs uppercase tracking-[0.32em] text-brass">
                 Em destaque
               </span>
@@ -139,7 +152,10 @@ export default async function HomePage() {
                   href={`/filmes/${hero.publicSlug}`}
                   className={ctaPrimaryClass}
                 >
-                  <span aria-hidden="true" className="text-base leading-none">
+                  <span
+                    aria-hidden="true"
+                    className="text-base leading-none transition-transform duration-300 ease-out motion-safe:group-hover:translate-x-[2px]"
+                  >
                     ▶
                   </span>
                   Conhecer esta história
@@ -157,12 +173,16 @@ export default async function HomePage() {
         /* --- Hero institucional (nenhum evento destacado) --- */
         <section className="relative isolate flex min-h-[68svh] items-center justify-center overflow-hidden border-b border-hairline lg:min-h-[72vh]">
           <AbstractBackdrop />
-          <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-7 px-6 py-16 text-center sm:px-8">
+          {/* costura hero -> catálogo */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-ink"
+          />
+          <div className="cine-stack relative mx-auto flex max-w-3xl flex-col items-center gap-7 px-6 py-16 text-center sm:px-8">
             <Wordmark size="lg" />
             <h1 className="font-display font-light leading-[1.05] tracking-[-0.01em] text-bone [font-size:clamp(2.5rem,7vw,5rem)]">
-              Seus momentos.
-              <br />
-              <span className="italic text-brass-soft">Seus filmes.</span>
+              <span className="block">Seus momentos.</span>
+              <span className="block italic text-brass-soft">Seus filmes.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-bone-dim sm:text-lg">
               Casamentos, 15 anos e eventos transformados em cinema — para

@@ -28,7 +28,7 @@ export function EventCard({
   return (
     <Link
       href={`/filmes/${event.publicSlug}`}
-      className={`group flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition-colors duration-300 hover:border-brass/40 focus-visible:border-brass/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/50 ${className}`}
+      className={`group flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition duration-300 ease-out hover:border-brass/40 focus-visible:border-brass/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/50 motion-safe:hover:-translate-y-1 ${className}`}
     >
       <div className="relative aspect-video w-full overflow-hidden">
         {event.coverUrl ? (
@@ -38,7 +38,7 @@ export function EventCard({
             fill
             unoptimized
             sizes="(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="object-cover transition-transform duration-[450ms] ease-out group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div

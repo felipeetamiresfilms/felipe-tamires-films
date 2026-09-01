@@ -26,7 +26,7 @@ export default async function FilmesPage() {
   return (
     <section className="mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-8 sm:py-24 2xl:max-w-[88rem]">
       <div className="flex flex-col gap-12">
-        <header className="flex max-w-2xl flex-col gap-4">
+        <header data-reveal-stagger className="flex max-w-2xl flex-col gap-4">
           <span className="text-xs uppercase tracking-[0.32em] text-brass">
             Felipe &amp; Tamires Films
           </span>
@@ -41,7 +41,10 @@ export default async function FilmesPage() {
             conhecer o trabalho.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            data-reveal-stagger
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {events.map((event) => (
               <EventCard key={event.publicSlug} event={event} />
             ))}

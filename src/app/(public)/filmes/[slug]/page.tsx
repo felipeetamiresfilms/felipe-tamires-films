@@ -85,7 +85,11 @@ export default async function PortfolioEventPage({
         collectionLabel="Assista"
         cover={
           event.coverUrl ? (
-            <CoverImage url={event.coverUrl} alt={`Capa de ${displayTitle}`} />
+            <CoverImage
+              url={event.coverUrl}
+              alt={`Capa de ${displayTitle}`}
+              motion="kenburns"
+            />
           ) : null
         }
         videos={event.videos}

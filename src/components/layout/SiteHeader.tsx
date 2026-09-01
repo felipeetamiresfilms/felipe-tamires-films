@@ -23,19 +23,19 @@ export function SiteHeader() {
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs uppercase tracking-[0.24em]">
           <Link
             href="/filmes"
-            className="text-bone-dim transition-colors hover:text-bone"
+            className="nav-underline text-bone-dim transition-colors hover:text-bone"
           >
             Filmes
           </Link>
           <Link
             href="/#casamentos"
-            className="hidden text-bone-dim transition-colors hover:text-bone sm:inline"
+            className="nav-underline hidden text-bone-dim transition-colors hover:text-bone sm:inline"
           >
             Casamentos
           </Link>
           <Link
             href="/#quinze-anos"
-            className="hidden text-bone-dim transition-colors hover:text-bone sm:inline"
+            className="nav-underline hidden text-bone-dim transition-colors hover:text-bone sm:inline"
           >
             15 anos
           </Link>

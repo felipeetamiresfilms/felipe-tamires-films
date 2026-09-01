@@ -15,7 +15,10 @@ export function HomeAboutSection() {
     <section id="sobre" className="scroll-mt-10">
       <div className="grid max-w-5xl items-center gap-10 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-14">
         {/* Foto do casal */}
-        <div className="relative mx-auto aspect-[4/5] w-full max-w-xs overflow-hidden rounded-xl border border-hairline bg-surface md:mx-0 md:max-w-none">
+        <div
+          data-reveal="image"
+          className="relative mx-auto aspect-[4/5] w-full max-w-xs overflow-hidden rounded-xl border border-hairline bg-surface md:mx-0 md:max-w-none"
+        >
           <Image
             src="/imgs/felipe-e-tamires.jpg"
             alt="Felipe e Tamires"
@@ -29,7 +32,7 @@ export function HomeAboutSection() {
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/40 to-transparent" />
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div data-reveal-stagger className="flex flex-col gap-5">
           <p className="text-xs uppercase tracking-[0.32em] text-brass">
             Sobre nós
           </p>

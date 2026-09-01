@@ -24,8 +24,14 @@ export function ContactBanner({
   secondary?: { label: string; href: string };
 }) {
   return (
-    <section className="rounded-2xl border border-hairline bg-surface/40 px-6 py-14 sm:px-10 sm:py-16">
-      <div className="mx-auto flex max-w-2xl flex-col items-center gap-5 text-center">
+    <section
+      data-reveal="soft"
+      className="rounded-2xl border border-hairline bg-surface/40 px-6 py-14 sm:px-10 sm:py-16"
+    >
+      <div
+        data-reveal-stagger
+        className="mx-auto flex max-w-2xl flex-col items-center gap-5 text-center"
+      >
         {eyebrow ? (
           <p className="text-xs uppercase tracking-[0.32em] text-brass">
             {eyebrow}

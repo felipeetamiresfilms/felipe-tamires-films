@@ -26,7 +26,7 @@ export function HomeValueSection() {
   return (
     <section aria-label="Como trabalhamos">
       <div className="flex max-w-4xl flex-col gap-10">
-        <div className="flex flex-col gap-4">
+        <div data-reveal-stagger className="flex flex-col gap-4">
           <p className="text-xs uppercase tracking-[0.32em] text-brass">
             Mais do que registrar um dia
           </p>
@@ -40,16 +40,23 @@ export function HomeValueSection() {
           </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-3 sm:gap-6">
+        <div data-reveal-stagger className="grid gap-8 sm:grid-cols-3 sm:gap-6">
           {TRAITS.map((trait, i) => (
             <div
               key={trait.label}
               className={
                 i === 0
                   ? "flex flex-col gap-2"
-                  : "flex flex-col gap-2 border-t border-hairline pt-6 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0"
+                  : "relative flex flex-col gap-2 border-t border-hairline pt-6 sm:border-t-0 sm:pl-6 sm:pt-0"
               }
             >
+              {i > 0 ? (
+                <span
+                  aria-hidden="true"
+                  data-rule
+                  className="pointer-events-none absolute left-0 top-0 hidden h-full w-px bg-hairline sm:block"
+                />
+              ) : null}
               <h3 className="text-xs uppercase tracking-[0.24em] text-bone">
                 {trait.label}
               </h3>
@@ -60,7 +67,7 @@ export function HomeValueSection() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div data-reveal="up" className="flex flex-col gap-3 sm:flex-row">
           <WhatsAppCTA
             message={WHATSAPP_MESSAGES.howItWorks}
             label="Converse com a gente"

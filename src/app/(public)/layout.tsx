@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { RevealScanner } from "@/components/motion/RevealScanner";
 
 /**
  * Área PÚBLICA: `/`, `/filmes`, `/filmes/[publicSlug]`.
@@ -16,6 +17,7 @@ export default function PublicLayout({
       <SiteHeader />
       <main className="flex flex-1 flex-col">{children}</main>
       <SiteFooter />
+      <RevealScanner />
     </>
   );
 }

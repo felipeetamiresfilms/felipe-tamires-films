@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { RevealScanner } from "@/components/motion/RevealScanner";
 
 /**
  * Biblioteca privada do cliente: `/meus-filmes/[token]`.
@@ -25,6 +26,7 @@ export default function MeusFilmesLayout({
         </div>
       </header>
       <main className="flex flex-1 flex-col">{children}</main>
+      <RevealScanner />
     </>
   );
 }

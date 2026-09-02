@@ -14,7 +14,7 @@ const TRAITS = [
   },
   {
     label: "Edição narrativa",
-    text: "Montamos um filme com ritmo, respiro e emoção — não uma sequência cronológica de imagens.",
+    text: "Montamos um filme com ritmo, respiro e emoção.",
   },
 ];
 

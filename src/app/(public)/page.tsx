@@ -1,5 +1,4 @@
 import { Fragment } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { getPortfolioHome, type PublicPortfolioCard } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
@@ -11,6 +10,7 @@ import {
 import { Wordmark } from "@/components/ui/Wordmark";
 import { EventCard } from "@/components/public/EventCard";
 import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
+import { HeroBackdropVideo } from "@/components/public/HeroBackdropVideo";
 import { HomeValueSection } from "@/components/public/HomeValueSection";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { ContactBanner } from "@/components/public/ContactBanner";
@@ -104,24 +104,12 @@ export default async function HomePage() {
       {hero ? (
         /* --- Hero com evento destacado --- */
         <section className="relative isolate flex min-h-[70svh] items-end overflow-hidden border-b border-hairline lg:min-h-[76vh]">
-          {hero.coverUrl ? (
-            <>
-              <Image
-                src={hero.coverUrl}
-                alt={`Capa de ${hero.title}`}
-                fill
-                priority
-                unoptimized
-                sizes="100vw"
-                className="cine-kenburns object-cover"
-              />
-              {/* overlays sutis — fotografia continua protagonista */}
-              <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/5" />
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/55 via-ink/10 to-transparent" />
-            </>
-          ) : (
-            <AbstractBackdrop />
-          )}
+          {/* hero em vídeo (local — public/videos/hero.mp4) */}
+          <AbstractBackdrop />
+          <HeroBackdropVideo />
+          {/* overlays sutis — texto legível sobre o vídeo */}
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/55 via-ink/10 to-transparent" />
 
           {/* costura hero -> catálogo */}
           <div
@@ -173,6 +161,9 @@ export default async function HomePage() {
         /* --- Hero institucional (nenhum evento destacado) --- */
         <section className="relative isolate flex min-h-[68svh] items-center justify-center overflow-hidden border-b border-hairline lg:min-h-[72vh]">
           <AbstractBackdrop />
+          <HeroBackdropVideo />
+          {/* escurece o vídeo para o texto central respirar */}
+          <div className="absolute inset-0 bg-ink/55" />
           {/* costura hero -> catálogo */}
           <div
             aria-hidden="true"

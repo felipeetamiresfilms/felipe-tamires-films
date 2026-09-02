@@ -7,6 +7,7 @@
 const OK_MESSAGES: Record<string, string> = {
   "cliente-criado": "Cliente criado.",
   "cliente-atualizado": "Cliente atualizado.",
+  "cliente-excluido": "Cliente excluído.",
   "evento-criado": "Evento criado.",
   "evento-atualizado": "Evento atualizado.",
   "evento-publicado": "Evento publicado. O link do cliente já funciona.",

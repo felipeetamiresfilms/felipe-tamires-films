@@ -243,6 +243,75 @@ export async function getAdminClientDetail(
   };
 }
 
+export interface ClientAcervoSummary {
+  /** Cliente existe (e é visível para este admin via RLS). */
+  exists: boolean;
+  eventCount: number;
+  /** Soma dos vídeos de todos os eventos do cliente (registros do sistema). */
+  videoCount: number;
+  /**
+   * Caminhos de objetos de CAPA realmente guardados no bucket `event-media`
+   * (prefixo `events/`, sem `://`). Fallbacks / URLs externas ficam de fora —
+   * nada de inferir path perigoso. Usado só para o cleanup best-effort do
+   * Storage DEPOIS da transação do banco.
+   */
+  coverPaths: string[];
+}
+
+/**
+ * Resumo do acervo do cliente para o fluxo de exclusão destrutiva (Etapa 10).
+ * Fonte de verdade da Server Action — nunca confiar em contagem vinda do
+ * browser. Sessão autenticada + RLS.
+ */
+export async function getClientAcervoSummary(
+  id: string,
+): Promise<ClientAcervoSummary> {
+  const empty: ClientAcervoSummary = {
+    exists: false,
+    eventCount: 0,
+    videoCount: 0,
+    coverPaths: [],
+  };
+  if (!isUuid(id)) return empty;
+
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, events(id, cover_image_url, videos(count))")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return empty;
+
+  const row = data as unknown as {
+    id: string;
+    events:
+      | {
+          id: string;
+          cover_image_url: string | null;
+          videos: { count: number }[] | null;
+        }[]
+      | null;
+  };
+
+  const events = row.events ?? [];
+  const videoCount = events.reduce(
+    (sum, e) => sum + (e.videos?.[0]?.count ?? 0),
+    0,
+  );
+  const coverPaths = events
+    .map((e) => e.cover_image_url)
+    .filter(
+      (p): p is string =>
+        typeof p === "string" &&
+        p.startsWith("events/") &&
+        !p.includes("://"),
+    );
+
+  return { exists: true, eventCount: events.length, videoCount, coverPaths };
+}
+
 // --- Evento (detalhe operacional) + vídeos -----------------------------
 
 export interface AdminVideoItem {

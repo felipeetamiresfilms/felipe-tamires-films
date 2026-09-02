@@ -57,6 +57,52 @@ export async function updateClient(
 }
 
 /**
+ * Exclui um cliente. Sessão autenticada + RLS (policy "clients admin delete",
+ * migration 20260902120000) — NUNCA service_role.
+ *
+ * Sem cascade: a FK events.client_id (ON DELETE RESTRICT) barra qualquer
+ * cliente que ainda tenha eventos — nesse caso o Postgres devolve 23503 e a
+ * Server Action traduz para mensagem amigável. Eventos, vídeos, capas e links
+ * privados nunca são tocados por aqui.
+ */
+export async function deleteClient(id: string): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("clients")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("client_not_found");
+}
+
+/**
+ * Exclusão DESTRUTIVA: cliente + eventos + vídeos numa transação só, via a
+ * RPC public.delete_client_with_acervo (migration 20260902130000).
+ *
+ * A RPC é SECURITY DEFINER e valida `auth.uid()` + `public.is_admin()` por
+ * dentro — aqui vai só a sessão autenticada (cookies). NUNCA service_role.
+ * Vídeos somem por CASCADE (videos.event_id -> events.id). A FK
+ * events.client_id continua ON DELETE RESTRICT: nenhum delete acidental
+ * apaga acervo, só esta chamada explícita.
+ *
+ * Erros da RPC sobem com o SQLSTATE original:
+ *   28000 -> sem sessão | 42501 -> não é admin | P0002 -> cliente não existe
+ */
+export async function deleteClientWithAcervo(id: string): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { error } = await supabase.rpc("delete_client_with_acervo", {
+    target_client_id: id,
+  });
+
+  if (error) throw error;
+}
+
+/**
  * Portal do cliente (Etapa 8): grava só o HASH do token (nunca o token puro),
  * marca a data e liga o portal. Regenerar chama isto de novo — o hash antigo
  * é substituído, então o link anterior para de funcionar na hora.

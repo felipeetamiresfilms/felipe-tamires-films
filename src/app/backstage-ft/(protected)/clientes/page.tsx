@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminClients } from "@/lib/admin/queries";
 import { formatEventDate } from "@/lib/format";
+import { FeedbackBanner } from "@/components/backstage/FeedbackBanner";
 import {
   ghostButtonClass,
   primaryButtonClass,
@@ -8,8 +9,15 @@ import {
 
 export const metadata = { title: "Clientes" };
 
-export default async function ClientsListPage() {
-  const clients = await getAdminClients();
+export default async function ClientsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string }>;
+}) {
+  const [clients, { ok }] = await Promise.all([
+    getAdminClients(),
+    searchParams,
+  ]);
 
   return (
     <section className="mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-8 2xl:max-w-[88rem]">
@@ -27,6 +35,8 @@ export default async function ClientsListPage() {
             + Novo cliente
           </Link>
         </header>
+
+        <FeedbackBanner code={ok} />
 
         {clients.length === 0 ? (
           <div className="flex flex-col items-start gap-4 rounded-xl border border-hairline bg-surface p-6">

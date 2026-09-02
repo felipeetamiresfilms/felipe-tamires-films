@@ -7,11 +7,13 @@ import { eventTypeLabels } from "@/lib/labels";
 import { FeedbackBanner } from "@/components/backstage/FeedbackBanner";
 import { StatusBadge } from "@/components/backstage/StatusBadge";
 import { ClientPortalAccess } from "@/components/backstage/ClientPortalAccess";
+import { ClientDangerZone } from "@/components/backstage/ClientDangerZone";
 import {
   ghostButtonClass,
   primaryButtonClass,
 } from "@/components/backstage/form-ui";
 import {
+  deleteClientAction,
   disableClientPortalAction,
   issueClientPortalAction,
 } from "../actions";
@@ -129,6 +131,13 @@ export default async function ClientDetailPage({
             </ul>
           )}
         </div>
+
+        <ClientDangerZone
+          clientId={client.id}
+          eventCount={client.events.length}
+          videoCount={client.events.reduce((sum, e) => sum + e.videoCount, 0)}
+          deleteAction={deleteClientAction}
+        />
       </div>
     </section>
   );

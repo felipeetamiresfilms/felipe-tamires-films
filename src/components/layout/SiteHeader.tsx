@@ -28,6 +28,12 @@ export function SiteHeader() {
             Filmes
           </Link>
           <Link
+            href="/recomendamos"
+            className="nav-underline text-bone-dim transition-colors hover:text-bone"
+          >
+            Recomendamos
+          </Link>
+          <Link
             href="/#casamentos"
             className="nav-underline hidden text-bone-dim transition-colors hover:text-bone sm:inline"
           >

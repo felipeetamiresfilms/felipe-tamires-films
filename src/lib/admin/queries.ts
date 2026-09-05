@@ -529,3 +529,195 @@ export async function getClientPortalState(
     createdAt: row?.portal_token_created_at ?? null,
   };
 }
+
+// --- Nossa Curadoria (parceiros) ---------------------------------------
+
+export interface AdminPartnerCategoryOption {
+  id: string;
+  name: string;
+  status: "active" | "inactive";
+}
+
+/** Todas as categorias (ativas e inativas) — inativas aparecem marcadas no
+ *  <select> para não travar a edição de um parceiro já vinculado a elas. */
+export async function getAdminPartnerCategoryOptions(): Promise<
+  AdminPartnerCategoryOption[]
+> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("partner_categories")
+    .select("id, name, status")
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+
+  return ((data ?? []) as { id: string; name: string; status: string }[]).map(
+    (row) => ({
+      id: row.id,
+      name: row.name,
+      status: row.status as "active" | "inactive",
+    }),
+  );
+}
+
+export interface AdminPartnerListItem {
+  id: string;
+  name: string;
+  slug: string;
+  categoryName: string;
+  status: PublishStatus;
+  featured: boolean;
+  createdAt: string;
+}
+
+interface AdminPartnerRow {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  featured: boolean;
+  created_at: string;
+  partner_categories: { name: string } | { name: string }[] | null;
+}
+
+export async function getAdminPartners(): Promise<AdminPartnerListItem[]> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("partners")
+    .select(
+      "id, name, slug, status, featured, created_at, partner_categories(name)",
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return ((data ?? []) as AdminPartnerRow[]).map((row) => {
+    const category = firstRelation(row.partner_categories);
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      categoryName: category?.name ?? "—",
+      status: row.status as PublishStatus,
+      featured: row.featured ?? false,
+      createdAt: row.created_at,
+    };
+  });
+}
+
+export interface AdminPartnerMediaItem {
+  id: string;
+  storagePath: string;
+  altText: string | null;
+  sortOrder: number;
+}
+
+export interface AdminPartnerDetail {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  description: string | null;
+  recommendationText: string | null;
+  location: string | null;
+  whatsappNumber: string | null;
+  instagramUrl: string | null;
+  websiteUrl: string | null;
+  coverImagePath: string | null;
+  videoProvider: string | null;
+  videoProviderId: string | null;
+  videoEmbedUrl: string | null;
+  featured: boolean;
+  sortOrder: number;
+  status: PublishStatus;
+  createdAt: string;
+  media: AdminPartnerMediaItem[];
+}
+
+export async function getAdminPartnerDetail(
+  id: string,
+): Promise<AdminPartnerDetail | null> {
+  if (!isUuid(id)) return null;
+
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("partners")
+    .select(
+      "id, category_id, name, slug, short_description, description, recommendation_text, location, whatsapp_number, instagram_url, website_url, cover_image_path, video_provider, video_provider_id, video_embed_url, featured, sort_order, status, created_at, partner_categories(name), partner_media(id, storage_path, alt_text, sort_order)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const row = data as unknown as {
+    id: string;
+    category_id: string;
+    name: string;
+    slug: string;
+    short_description: string | null;
+    description: string | null;
+    recommendation_text: string | null;
+    location: string | null;
+    whatsapp_number: string | null;
+    instagram_url: string | null;
+    website_url: string | null;
+    cover_image_path: string | null;
+    video_provider: string | null;
+    video_provider_id: string | null;
+    video_embed_url: string | null;
+    featured: boolean;
+    sort_order: number;
+    status: string;
+    created_at: string;
+    partner_categories: { name: string } | { name: string }[] | null;
+    partner_media:
+      | {
+          id: string;
+          storage_path: string;
+          alt_text: string | null;
+          sort_order: number;
+        }[]
+      | null;
+  };
+
+  const category = firstRelation(row.partner_categories);
+  const media = (row.partner_media ?? [])
+    .map((m) => ({
+      id: m.id,
+      storagePath: m.storage_path,
+      altText: m.alt_text,
+      sortOrder: m.sort_order,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  return {
+    id: row.id,
+    categoryId: row.category_id,
+    categoryName: category?.name ?? "—",
+    name: row.name,
+    slug: row.slug,
+    shortDescription: row.short_description,
+    description: row.description,
+    recommendationText: row.recommendation_text,
+    location: row.location,
+    whatsappNumber: row.whatsapp_number,
+    instagramUrl: row.instagram_url,
+    websiteUrl: row.website_url,
+    coverImagePath: row.cover_image_path,
+    videoProvider: row.video_provider,
+    videoProviderId: row.video_provider_id,
+    videoEmbedUrl: row.video_embed_url,
+    featured: row.featured ?? false,
+    sortOrder: row.sort_order,
+    status: row.status as PublishStatus,
+    createdAt: row.created_at,
+    media,
+  };
+}

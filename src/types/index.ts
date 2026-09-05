@@ -92,3 +92,58 @@ export interface EventWithRelations {
   client: Client;
   videos: Video[];
 }
+
+// --- Nossa Curadoria (parceiros recomendados) ---------------------------
+
+/** Categoria da curadoria pública (/recomendamos). Sem enum rígido no
+ *  código: novas categorias entram só com uma linha na tabela. */
+export interface PartnerCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Provedor do vídeo de um parceiro — só YouTube nesta etapa. */
+export type PartnerVideoProvider = "youtube";
+
+/** Profissional/lugar recomendado pela Felipe & Tamires Films. */
+export interface Partner {
+  id: string;
+  categoryId: string;
+  name: string;
+  /** Endereço público /recomendamos/[slug] — legível e estável, não é segredo. */
+  slug: string;
+  shortDescription: string | null;
+  description: string | null;
+  /** Recomendação editorial da Felipe & Tamires — seção pública "Por que indicamos". */
+  recommendationText: string | null;
+  location: string | null;
+  /** Só dígitos internacionalizados, ex.: "5554999999999". Contato direto com o parceiro. */
+  whatsappNumber: string | null;
+  instagramUrl: string | null;
+  websiteUrl: string | null;
+  coverImagePath: string | null;
+  videoProvider: PartnerVideoProvider | null;
+  videoProviderId: string | null;
+  videoEmbedUrl: string | null;
+  featured: boolean;
+  sortOrder: number;
+  status: PublishStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Uma foto da galeria pública de um parceiro. */
+export interface PartnerMediaItem {
+  id: string;
+  partnerId: string;
+  storagePath: string;
+  altText: string | null;
+  sortOrder: number;
+  createdAt: string;
+}

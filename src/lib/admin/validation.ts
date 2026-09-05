@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { EventType, VideoCategory, VideoProvider } from "@/types";
+import type { EventType, PublishStatus, VideoCategory, VideoProvider } from "@/types";
 
 /**
  * Schemas de validação SERVER-SIDE das operações de escrita do painel.
@@ -169,3 +169,45 @@ export const videoInputSchema = z.object({
 });
 
 export type VideoInput = z.infer<typeof videoInputSchema>;
+
+// --- Parceiro (Nossa Curadoria) ------------------------------------------
+
+const PARTNER_STATUS_VALUES = [
+  "draft",
+  "published",
+  "archived",
+] as const satisfies readonly PublishStatus[];
+
+/** Aceita qualquer formatação digitada e guarda só dígitos (DDI+DDD+número). */
+const optionalWhatsapp = z
+  .string()
+  .optional()
+  .transform(nullIfBlank)
+  .transform((v) => (v === null ? null : v.replace(/\D/g, "")))
+  .refine(
+    (v) => v === null || /^\d{10,15}$/.test(v),
+    "Use só números com DDI e DDD, ex.: 5554999999999.",
+  );
+
+export const partnerInputSchema = z.object({
+  categoryId: uuidField("uma categoria"),
+  name: requiredText(160, "o nome"),
+  shortDescription: optionalText(240, "a descrição curta"),
+  description: optionalText(4000, "a descrição"),
+  recommendationText: optionalText(2000, "por que indicamos"),
+  location: optionalText(160, "a localização"),
+  whatsappNumber: optionalWhatsapp,
+  instagramUrl: optionalUrl("o Instagram"),
+  websiteUrl: optionalUrl("o site"),
+  featured: z.string().transform((v) => v === "true"),
+  sortOrder: z
+    .string()
+    .transform((v) => (v.trim() === "" ? 0 : Number(v)))
+    .refine(
+      (v) => Number.isInteger(v) && v >= 0 && v <= 100000,
+      "Ordem inválida.",
+    ),
+  status: enumField(PARTNER_STATUS_VALUES, "Status inválido."),
+});
+
+export type PartnerInput = z.infer<typeof partnerInputSchema>;

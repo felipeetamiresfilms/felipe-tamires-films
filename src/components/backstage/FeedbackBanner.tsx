@@ -23,6 +23,11 @@ const OK_MESSAGES: Record<string, string> = {
   "destaque-ativado": "Evento marcado como destaque na home.",
   "destaque-removido": "Destaque removido.",
   "portfolio-video": "Seleção de vídeos do portfólio atualizada.",
+  "parceiro-criado": "Parceiro criado.",
+  "parceiro-atualizado": "Parceiro atualizado.",
+  "foto-adicionada": "Foto adicionada à galeria.",
+  "foto-removida": "Foto removida da galeria.",
+  "foto-movida": "Ordem da galeria atualizada.",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -33,6 +38,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Confirme a autorização de uso antes de ativar o portfólio.",
   portfolio: "Não foi possível atualizar o portfólio. Tente de novo.",
   acao: "Não foi possível concluir a ação. Tente de novo.",
+  galeria:
+    "Não foi possível enviar a foto. Use JPEG, PNG ou WEBP de até 10 MB.",
 };
 
 function pick(value: string | string[] | undefined): string | undefined {

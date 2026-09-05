@@ -13,6 +13,7 @@ import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
 import { HeroBackdropVideo } from "@/components/public/HeroBackdropVideo";
 import { HomeValueSection } from "@/components/public/HomeValueSection";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
+import { HomeCurationSection } from "@/components/public/HomeCurationSection";
 import { ContactBanner } from "@/components/public/ContactBanner";
 import { ctaPrimaryClass } from "@/components/public/cta";
 
@@ -205,6 +206,8 @@ export default async function HomePage() {
           {rows.length === 0 ? <HomeValueSection /> : null}
 
           <HomeAboutSection />
+
+          <HomeCurationSection />
 
           <ContactBanner
             eyebrow="Vamos conversar"

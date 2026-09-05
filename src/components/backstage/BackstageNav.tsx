@@ -7,6 +7,7 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/backstage-ft", label: "Dashboard", exact: true },
   { href: "/backstage-ft/clientes", label: "Clientes" },
   { href: "/backstage-ft/eventos", label: "Eventos" },
+  { href: "/backstage-ft/curadoria", label: "Curadoria" },
 ];
 
 /**

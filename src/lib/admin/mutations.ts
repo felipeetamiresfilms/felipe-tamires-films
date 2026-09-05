@@ -2,7 +2,7 @@ import "server-only";
 
 import { createServerAuthClient } from "@/lib/supabase/server";
 import { buildEventSlug, slugifyTitle } from "@/lib/admin/slug";
-import type { ClientInput, EventInput } from "@/lib/admin/validation";
+import type { ClientInput, EventInput, PartnerInput } from "@/lib/admin/validation";
 import type { PublishStatus } from "@/types";
 
 /**
@@ -620,6 +620,293 @@ export async function moveVideoInEvent(
       .update({ sort_order: order })
       .eq("id", id)
       .eq("event_id", eventId);
+    if (upErr) throw upErr;
+  }
+}
+
+// --- Nossa Curadoria (parceiros) ---------------------------------------
+
+export async function partnerCategoryExists(id: string): Promise<boolean> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partner_categories")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/**
+ * `slug` público, legível e ESTÁVEL (não é segredo — conteúdo já é público).
+ * Mesma lógica de `generatePublicSlug`: colisão -> sufixo `-2`, `-3`, ...
+ */
+export async function generatePartnerSlug(name: string): Promise<string> {
+  const supabase = await createServerAuthClient();
+  const base = slugifyTitle(name);
+
+  for (let i = 0; i < 50; i += 1) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`;
+    const { data, error } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return candidate;
+  }
+
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+export interface PartnerVideoFields {
+  videoProvider: "youtube" | null;
+  videoProviderId: string | null;
+  videoEmbedUrl: string | null;
+}
+
+function toPartnerColumns(input: PartnerInput, video: PartnerVideoFields) {
+  return {
+    category_id: input.categoryId,
+    name: input.name,
+    short_description: input.shortDescription,
+    description: input.description,
+    recommendation_text: input.recommendationText,
+    location: input.location,
+    whatsapp_number: input.whatsappNumber,
+    instagram_url: input.instagramUrl,
+    website_url: input.websiteUrl,
+    video_provider: video.videoProvider,
+    video_provider_id: video.videoProviderId,
+    video_embed_url: video.videoEmbedUrl,
+    featured: input.featured,
+    sort_order: input.sortOrder,
+    status: input.status,
+  };
+}
+
+export async function insertPartner(
+  input: PartnerInput,
+  video: PartnerVideoFields,
+): Promise<{ id: string }> {
+  const supabase = await createServerAuthClient();
+  const slug = await generatePartnerSlug(input.name);
+
+  const { data, error } = await supabase
+    .from("partners")
+    .insert({ ...toPartnerColumns(input, video), slug })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return { id: data.id as string };
+}
+
+/** Atualiza os campos editáveis. NÃO toca em `slug`. */
+export async function updatePartner(
+  id: string,
+  input: PartnerInput,
+  video: PartnerVideoFields,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("partners")
+    .update(toPartnerColumns(input, video))
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("partner_not_found");
+}
+
+export interface PartnerStatusRow {
+  id: string;
+  name: string;
+  /** Caminho do objeto no bucket `partner-media` (ou `null`). */
+  coverImagePath: string | null;
+}
+
+export async function getPartnerStatusRow(
+  id: string,
+): Promise<PartnerStatusRow | null> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partners")
+    .select("id, name, cover_image_path")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const row = data as {
+    id: string;
+    name: string;
+    cover_image_path: string | null;
+  };
+  return { id: row.id, name: row.name, coverImagePath: row.cover_image_path };
+}
+
+export async function setPartnerCoverPath(
+  id: string,
+  path: string | null,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partners")
+    .update({ cover_image_path: path })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("partner_not_found");
+}
+
+// --- Galeria de fotos do parceiro --------------------------------------
+
+/** Nova foto entra no fim da galeria (`sort_order` = maior atual + 1). */
+export async function insertPartnerMedia(
+  partnerId: string,
+  storagePath: string,
+  altText: string | null,
+): Promise<{ id: string }> {
+  const supabase = await createServerAuthClient();
+
+  const { data: last, error: lastError } = await supabase
+    .from("partner_media")
+    .select("sort_order")
+    .eq("partner_id", partnerId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lastError) throw lastError;
+
+  const nextOrder = (last?.sort_order ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from("partner_media")
+    .insert({
+      partner_id: partnerId,
+      storage_path: storagePath,
+      alt_text: altText,
+      sort_order: nextOrder,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return { id: data.id as string };
+}
+
+export interface PartnerMediaRow {
+  id: string;
+  storagePath: string;
+}
+
+/** Confere que a foto pertence ao parceiro da URL antes de mexer nela. */
+export async function getPartnerMediaInPartner(
+  partnerId: string,
+  mediaId: string,
+): Promise<PartnerMediaRow | null> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partner_media")
+    .select("id, storage_path")
+    .eq("id", mediaId)
+    .eq("partner_id", partnerId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+  return { id: data.id as string, storagePath: data.storage_path as string };
+}
+
+/**
+ * Remove a linha da galeria. Sem exclusão de parceiro/categoria nesta etapa
+ * (seção 10 do briefing) — mas uma FOTO isolada pode ser removida livremente,
+ * é o próprio recurso de "remover fotos da galeria" pedido na edição.
+ */
+export async function deletePartnerMedia(
+  partnerId: string,
+  mediaId: string,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partner_media")
+    .delete()
+    .eq("id", mediaId)
+    .eq("partner_id", partnerId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("media_not_found");
+}
+
+/**
+ * Move uma foto uma posição para cima/baixo trocando o `sort_order` com a
+ * vizinha. Mesma lógica de `moveVideoInEvent` (sem drag-and-drop).
+ */
+export async function movePartnerMedia(
+  partnerId: string,
+  mediaId: string,
+  direction: "up" | "down",
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+
+  const { data, error } = await supabase
+    .from("partner_media")
+    .select("id, sort_order, created_at")
+    .eq("partner_id", partnerId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const rows = (data ?? []) as {
+    id: string;
+    sort_order: number;
+    created_at: string;
+  }[];
+  const index = rows.findIndex((r) => r.id === mediaId);
+  if (index === -1) throw new Error("media_not_found");
+
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (target < 0 || target >= rows.length) return;
+
+  const current = rows[index];
+  const neighbour = rows[target];
+
+  if (current.sort_order === neighbour.sort_order) {
+    const reindexed = rows.map((r, i) => ({ id: r.id, order: i + 1 }));
+    [reindexed[index].order, reindexed[target].order] = [
+      reindexed[target].order,
+      reindexed[index].order,
+    ];
+    for (const item of reindexed) {
+      const { error: upErr } = await supabase
+        .from("partner_media")
+        .update({ sort_order: item.order })
+        .eq("id", item.id)
+        .eq("partner_id", partnerId);
+      if (upErr) throw upErr;
+    }
+    return;
+  }
+
+  const swaps: Array<[string, number]> = [
+    [current.id, neighbour.sort_order],
+    [neighbour.id, current.sort_order],
+  ];
+  for (const [id, order] of swaps) {
+    const { error: upErr } = await supabase
+      .from("partner_media")
+      .update({ sort_order: order })
+      .eq("id", id)
+      .eq("partner_id", partnerId);
     if (upErr) throw upErr;
   }
 }

@@ -2,21 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listPortfolioEvents } from "@/lib/portfolio";
 import { WHATSAPP_MESSAGES } from "@/config/site";
+import { OG_BASE } from "@/config/seo";
 import { EventCard } from "@/components/public/EventCard";
 import { ContactBanner } from "@/components/public/ContactBanner";
 
 export const dynamic = "force-dynamic";
 
+const DESCRIPTION =
+  "Filmes reais produzidos pela Felipe & Tamires Films: casamentos, 15 anos e aniversários registrados com linguagem cinematográfica.";
+
 export const metadata: Metadata = {
-  title: "Filmes",
-  description:
-    "Histórias de casamentos, 15 anos e eventos que a Felipe & Tamires Films teve o privilégio de filmar.",
+  title: "Filmes de casamento, 15 anos e eventos",
+  description: DESCRIPTION,
   alternates: { canonical: "/filmes" },
   openGraph: {
-    title: "Filmes | Felipe & Tamires Films",
-    description:
-      "Histórias de casamentos, 15 anos e eventos que a Felipe & Tamires Films teve o privilégio de filmar.",
+    ...OG_BASE,
     type: "website",
+    url: "/filmes",
+    title: "Filmes de casamento, 15 anos e eventos · Felipe & Tamires Films",
+    description: DESCRIPTION,
   },
 };
 
@@ -33,6 +37,10 @@ export default async function FilmesPage() {
           <h1 className="font-display font-light leading-[1.05] text-bone [font-size:clamp(2.25rem,5vw,4rem)]">
             Histórias que tivemos o privilégio de contar
           </h1>
+          <p className="max-w-prose text-sm leading-relaxed text-bone-dim sm:text-base">
+            Filmes de casamento, 15 anos e aniversário produzidos pela Felipe
+            &amp; Tamires Films.
+          </p>
         </header>
 
         {events.length === 0 ? (

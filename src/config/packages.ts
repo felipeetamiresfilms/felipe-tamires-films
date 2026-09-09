@@ -121,7 +121,7 @@ export const PACKAGE_EVENT_TYPES: PackageEventMeta[] = [
     id: "15-anos",
     label: "15 anos",
     hint: "A noite dela, do primeiro retoque ao último abraço.",
-    image: "/imgs/15 anos.png",
+    image: "/imgs/15-anos.webp",
     imageAlt:
       "Debutante em vestido de gala sob luz quente durante a valsa.",
     fallbackGradient: [
@@ -137,7 +137,7 @@ export const PACKAGE_EVENT_TYPES: PackageEventMeta[] = [
     id: "casamento",
     label: "Casamento",
     hint: "A cerimônia, a festa e tudo que acontece nos intervalos.",
-    image: "/imgs/casamento.png",
+    image: "/imgs/casamento.webp",
     imageAlt:
       "Casal de mãos dadas ao fim da cerimônia, convidados desfocados ao fundo.",
     fallbackGradient: [
@@ -153,7 +153,7 @@ export const PACKAGE_EVENT_TYPES: PackageEventMeta[] = [
     id: "aniversario",
     label: "Aniversário",
     hint: "Do brinde à pista — o dia inteiro em filme e fotografia.",
-    image: "/imgs/anioversario.png",
+    image: "/imgs/aniversario.webp",
     imageAlt:
       "Mesa de festa iluminada por velas, pessoas rindo ao redor.",
     fallbackGradient: [

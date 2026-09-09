@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getPortfolioHome, type PublicPortfolioCard } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
@@ -16,10 +17,30 @@ import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeCurationSection } from "@/components/public/HomeCurationSection";
 import { ContactBanner } from "@/components/public/ContactBanner";
 import { ctaPrimaryClass } from "@/components/public/cta";
+import { OG_BASE } from "@/config/seo";
 
 // Lê o portfólio ao vivo (service_role) e assina URLs de capa — renderiza
 // a cada request, sem snapshot em build. Zero iframe: só imagens.
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  // `absolute` evita o sufixo do template (a marca já está no título).
+  title: {
+    absolute:
+      "Felipe & Tamires Films — Filmes de casamento, 15 anos e eventos",
+  },
+  description:
+    "Produtora de filmes de eventos. Transformamos casamentos, 15 anos e aniversários em filmes cinematográficos para reviver, não apenas assistir.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    ...OG_BASE,
+    type: "website",
+    url: "/",
+    title: "Felipe & Tamires Films — Filmes de casamento, 15 anos e eventos",
+    description:
+      "Produtora de filmes de eventos: casamentos, 15 anos e aniversários em filmes cinematográficos.",
+  },
+};
 
 // Largura do card nas fileiras: mostra o próximo card "espiando" no mobile,
 // cresce por breakpoint até telas grandes (não fica minúsculo no 4K).

@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
 import { WHATSAPP_MESSAGES } from "@/config/site";
+import { OG_BASE } from "@/config/seo";
 import { isPackageEventType } from "@/config/packages";
 import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
 import { PackagesExplorer } from "@/components/public/PackagesExplorer";
 
+const DESCRIPTION =
+  "Pacotes de produção audiovisual da Felipe & Tamires Films para casamento, 15 anos e aniversário — do essencial (Essência) à cobertura completa (Experiência). Sem preços fixos: cada orçamento é conversado.";
+
+// `canonical` fixo em `/pacotes`: os estados `?evento=casamento|15-anos|
+// aniversario` são a MESMA página (a seleção é client-side), não URLs
+// indexáveis separadas.
 export const metadata: Metadata = {
-  title: "Pacotes",
-  description:
-    "Os caminhos da Felipe & Tamires Films para transformar 15 anos, casamentos e aniversários em cinema — do essencial à experiência completa.",
+  title: "Pacotes de filmagem para casamento, 15 anos e aniversário",
+  description: DESCRIPTION,
   alternates: { canonical: "/pacotes" },
   openGraph: {
-    title: "Pacotes | Felipe & Tamires Films",
-    description:
-      "Os caminhos da Felipe & Tamires Films para transformar 15 anos, casamentos e aniversários em cinema — do essencial à experiência completa.",
+    ...OG_BASE,
     type: "website",
+    url: "/pacotes",
+    title:
+      "Pacotes de filmagem para casamento, 15 anos e aniversário · Felipe & Tamires Films",
+    description: DESCRIPTION,
   },
 };
 
@@ -36,10 +44,10 @@ export default async function PacotesPage({
             Um jeito de contar a sua história — do essencial ao completo.
           </h1>
           <p className="max-w-prose text-sm leading-relaxed text-bone-dim sm:text-base">
-            Cada evento acontece uma vez só. Estes são os caminhos que
-            oferecemos para transformar o seu em filme — três níveis que se
-            somam, do registro dos momentos principais até a história inteira,
-            sem cortes.
+            Cada evento acontece uma vez só. Estes são os pacotes de filmagem
+            que oferecemos para casamento, 15 anos e aniversário — três níveis
+            que se somam, do registro dos momentos principais até a história
+            inteira, sem cortes.
           </p>
         </header>
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { SITE_NAME, SITE_URL } from "@/config/site";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -17,13 +18,18 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Felipe & Tamires Films — Seus momentos. Seus filmes.",
-    template: "%s · Felipe & Tamires Films",
+    default: "Felipe & Tamires Films — Filmes de casamento, 15 anos e eventos",
+    template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Portal privado de entrega de filmes de casamentos, 15 anos e eventos sociais da Felipe & Tamires Films.",
-  applicationName: "Felipe & Tamires Films",
+    "Felipe & Tamires Films é uma produtora de filmes de eventos: casamentos, 15 anos e aniversários registrados com linguagem cinematográfica — filmes para reviver, não apenas assistir.",
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({

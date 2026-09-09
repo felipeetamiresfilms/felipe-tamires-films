@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
 import { listCurationCategories } from "@/lib/curadoria";
+import { OG_BASE } from "@/config/seo";
 import { PartnerCard } from "@/components/public/PartnerCard";
 
 // Lê a curadoria ao vivo (service_role) — renderiza a cada request, sem
 // snapshot em build. Mesma estratégia de /filmes.
 export const dynamic = "force-dynamic";
 
+const DESCRIPTION =
+  "A curadoria da Felipe & Tamires Films: profissionais e lugares de confiança para casamentos, 15 anos e eventos.";
+
 export const metadata: Metadata = {
-  title: "Recomendamos",
-  description:
-    "Profissionais e lugares que a Felipe & Tamires Films conhece, confia e recomenda para o seu evento.",
+  title: "Recomendamos — curadoria para casamentos e eventos",
+  description: DESCRIPTION,
   alternates: { canonical: "/recomendamos" },
   openGraph: {
-    title: "Recomendamos | Felipe & Tamires Films",
-    description:
-      "Profissionais e lugares que a Felipe & Tamires Films conhece, confia e recomenda para o seu evento.",
+    ...OG_BASE,
     type: "website",
+    url: "/recomendamos",
+    title: "Recomendamos — curadoria da Felipe & Tamires Films",
+    description: DESCRIPTION,
   },
 };
 

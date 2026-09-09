@@ -4,20 +4,29 @@ import { getPortfolioEvent } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
 import { formatEventDate } from "@/lib/format";
 import { portfolioEventWhatsAppMessage } from "@/config/site";
+import { SITE_NAME, SITE_URL } from "@/config/site";
+import { OG_BASE, OG_IMAGE } from "@/config/seo";
 import { CoverImage } from "@/components/watch/CoverImage";
 import { WatchClient } from "@/components/watch/WatchClient";
 import { ContactBanner } from "@/components/public/ContactBanner";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const dynamic = "force-dynamic";
 
 type PageParams = { slug: string };
 
-/**
- * OG: sem `og:image`. A capa é uma signed URL que expira em 6h — colocá-la
- * numa meta tag daria um cartão quebrado depois do vencimento e exigiria
- * arquitetura extra (imagem pública dedicada) que não vale a pena agora.
- * Privacidade e estabilidade acima de um preview de link.
- */
+/** Miniatura estável e pública para OG (thumb do YouTube ou a definida pelo
+ *  admin). NUNCA a capa: ela é signed URL que expira em 6h. */
+function publicPoster(event: {
+  videos: { category: string; posterUrl: string | null }[];
+}): string | null {
+  const poster =
+    event.videos.find((v) => v.category === "main_film")?.posterUrl ??
+    event.videos[0]?.posterUrl ??
+    null;
+  return poster && /^https?:\/\//.test(poster) ? poster : null;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -34,16 +43,33 @@ export async function generateMetadata({
     event.description ??
     `${eventTypeLabels[event.eventType]}${
       event.location ? ` em ${event.location}` : ""
+    }${
+      event.eventDate ? `, ${formatEventDate(event.eventDate)}` : ""
     } — um filme da Felipe & Tamires Films.`;
 
+  const title = `${event.title} | ${SITE_NAME}`;
+  const poster = publicPoster(event);
+  const images = poster
+    ? [{ url: poster, alt: `Cena do filme ${event.title}` }]
+    : OG_BASE.images;
+
   return {
-    title: { absolute: `${event.title} | Felipe & Tamires Films` },
+    title: { absolute: title },
     description,
     alternates: { canonical: `/filmes/${event.publicSlug}` },
     openGraph: {
-      title: `${event.title} | Felipe & Tamires Films`,
-      description,
+      ...OG_BASE,
       type: "video.other",
+      url: `/filmes/${event.publicSlug}`,
+      title,
+      description,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [poster ?? OG_IMAGE.url],
     },
   };
 }
@@ -74,8 +100,29 @@ export default async function PortfolioEventPage({
     event.videos[0]?.id ??
     null;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: `${SITE_URL}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Filmes",
+        item: `${SITE_URL}/filmes`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: event.title,
+        item: `${SITE_URL}/filmes/${event.publicSlug}`,
+      },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd} />
       <WatchClient
         displayTitle={displayTitle}
         metaLine={metaLine}

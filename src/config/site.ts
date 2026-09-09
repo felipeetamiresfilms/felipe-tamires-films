@@ -11,6 +11,28 @@ export const SITE_CONFIG = {
   whatsappNumber: "5554997006436",
 } as const;
 
+/** Nome da marca — fonte única para textos institucionais e metadata. */
+export const SITE_NAME = "Felipe & Tamires Films";
+
+/** Telefone público em formato E.164 (mesmo número do WhatsApp). */
+export const SITE_PHONE_E164 = "+5554997006436";
+
+/**
+ * Origem canônica do site público, SEM barra final. Usada em `metadataBase`,
+ * canonical, Open Graph, sitemap, robots e JSON-LD.
+ *
+ * Em produção defina `NEXT_PUBLIC_SITE_URL` com o domínio REAL
+ * (`https://felipeetamiresfilms.com.br` — sem `www`). Sem isso, cai para a
+ * URL do deploy (Netlify injeta `URL`) e, por último, `localhost` no dev.
+ */
+export const SITE_URL: string = (() => {
+  const candidates = [process.env.NEXT_PUBLIC_SITE_URL, process.env.URL];
+  for (const value of candidates) {
+    if (value && /^https?:\/\//.test(value)) return value.replace(/\/+$/, "");
+  }
+  return "http://localhost:3000";
+})();
+
 /** Monta a URL do WhatsApp com a mensagem pré-preenchida. */
 export function buildWhatsAppUrl(message: string): string {
   return `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodeURIComponent(

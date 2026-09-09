@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getPartnerBySlug } from "@/lib/curadoria";
+import { SITE_NAME, SITE_URL } from "@/config/site";
+import { OG_BASE, OG_IMAGE } from "@/config/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { PartnerWhatsAppCTA } from "@/components/public/PartnerWhatsAppCTA";
 
 export const dynamic = "force-dynamic";
@@ -26,14 +29,32 @@ export async function generateMetadata({
       partner.location ? ` em ${partner.location}` : ""
     } — recomendado pela Felipe & Tamires Films.`;
 
+  const title = `${partner.name} | ${SITE_NAME}`;
+  const cover =
+    partner.coverUrl && /^https?:\/\//.test(partner.coverUrl)
+      ? partner.coverUrl
+      : null;
+  const images = cover
+    ? [{ url: cover, alt: `Foto de ${partner.name}` }]
+    : OG_BASE.images;
+
   return {
-    title: { absolute: `${partner.name} | Felipe & Tamires Films` },
+    title: { absolute: title },
     description,
     alternates: { canonical: `/recomendamos/${partner.slug}` },
     openGraph: {
-      title: `${partner.name} | Felipe & Tamires Films`,
-      description,
+      ...OG_BASE,
       type: "website",
+      url: `/recomendamos/${partner.slug}`,
+      title,
+      description,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [cover ?? OG_IMAGE.url],
     },
   };
 }
@@ -57,8 +78,29 @@ export default async function PartnerPublicPage({
     partner.whatsappNumber || partner.instagramUrl || partner.websiteUrl,
   );
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: `${SITE_URL}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Recomendamos",
+        item: `${SITE_URL}/recomendamos`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: partner.name,
+        item: `${SITE_URL}/recomendamos/${partner.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="flex flex-1 flex-col">
+      <JsonLd data={breadcrumbJsonLd} />
       <section className="relative isolate flex min-h-[46svh] items-end overflow-hidden border-b border-hairline">
         <div className="absolute inset-0">
           {partner.coverUrl ? (

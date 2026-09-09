@@ -22,7 +22,9 @@ export async function generateMetadata({
 
   return {
     title: data.event.title,
-    description: `Filmes do evento de ${data.client.displayName}.`,
+    // Descrição genérica: nada de nome de cliente ou dado pessoal. A página
+    // é privada (noindex, nofollow, sem canonical, sem OG público).
+    description: "Entrega privada de filmes da Felipe & Tamires Films.",
     robots: { index: false, follow: false },
   };
 }

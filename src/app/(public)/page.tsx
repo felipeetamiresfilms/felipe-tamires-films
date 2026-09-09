@@ -32,6 +32,16 @@ const CATEGORY_ANCHOR: Record<string, string> = {
   events: "eventos",
 };
 
+/**
+ * CTA editorial da seção -> /pacotes já com a modalidade pré-selecionada.
+ * `event` casa com o parâmetro `?evento=` da página de pacotes.
+ */
+const CATEGORY_PACKAGES: Record<string, { event: string; noun: string }> = {
+  weddings: { event: "casamento", noun: "casamento" },
+  debuts: { event: "15-anos", noun: "15 anos" },
+  events: { event: "aniversario", noun: "aniversário" },
+};
+
 function AbstractBackdrop() {
   return (
     <div
@@ -48,9 +58,16 @@ function AbstractBackdrop() {
   );
 }
 
-type RowSpec = { key: string; id?: string; title: string; events: PublicPortfolioCard[] };
+type PackagesCta = { href: string; noun: string };
+type RowSpec = {
+  key: string;
+  id?: string;
+  title: string;
+  events: PublicPortfolioCard[];
+  packagesCta?: PackagesCta;
+};
 
-function Row({ id, title, events }: Omit<RowSpec, "key">) {
+function Row({ id, title, events, packagesCta }: Omit<RowSpec, "key">) {
   if (events.length === 0) return null;
   return (
     <section id={id} className="flex scroll-mt-10 flex-col gap-5">
@@ -68,6 +85,21 @@ function Row({ id, title, events }: Omit<RowSpec, "key">) {
           <EventCard key={event.publicSlug} event={event} className={rowCard} />
         ))}
       </div>
+      {packagesCta ? (
+        <Link
+          href={packagesCta.href}
+          data-reveal="up"
+          className="group inline-flex items-center gap-2 self-start text-xs uppercase tracking-[0.24em] text-brass-soft transition-colors hover:text-brass"
+        >
+          Conheça nossos pacotes de {packagesCta.noun}
+          <span
+            aria-hidden="true"
+            className="transition-transform duration-300 ease-out motion-safe:group-hover:translate-x-[3px]"
+          >
+            →
+          </span>
+        </Link>
+      ) : null}
     </section>
   );
 }
@@ -79,12 +111,18 @@ export default async function HomePage() {
     ...(spotlight.length
       ? [{ key: "spotlight", title: "Em destaque", events: spotlight }]
       : []),
-    ...categories.map((c) => ({
-      key: c.key,
-      id: CATEGORY_ANCHOR[c.key],
-      title: c.label,
-      events: c.events,
-    })),
+    ...categories.map((c) => {
+      const pkg = CATEGORY_PACKAGES[c.key];
+      return {
+        key: c.key,
+        id: CATEGORY_ANCHOR[c.key],
+        title: c.label,
+        events: c.events,
+        packagesCta: pkg
+          ? { href: `/pacotes?evento=${pkg.event}`, noun: pkg.noun }
+          : undefined,
+      };
+    }),
     ...(recent.length >= 2
       ? [{ key: "recent", title: "Histórias recentes", events: recent }]
       : []),
@@ -199,7 +237,12 @@ export default async function HomePage() {
         <div className="flex flex-col gap-16 py-16 sm:gap-24 sm:py-24">
           {rows.map((row, i) => (
             <Fragment key={row.key}>
-              <Row id={row.id} title={row.title} events={row.events} />
+              <Row
+                id={row.id}
+                title={row.title}
+                events={row.events}
+                packagesCta={row.packagesCta}
+              />
               {i === 0 ? <HomeValueSection /> : null}
             </Fragment>
           ))}

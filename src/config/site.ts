@@ -41,6 +41,9 @@ export const WHATSAPP_MESSAGES = {
   /** Link "Falar conosco" do header. */
   header:
     "Olá, Felipe e Tamires! Conheci o site de vocês e gostaria de falar sobre a filmagem do meu evento.",
+  /** Bloco "Seu evento é diferente?" da página /pacotes. */
+  packagesOther:
+    "Olá, vim pelo site de vocês e gostaria de conversar sobre a cobertura de um evento.",
 } as const;
 
 /**
@@ -70,4 +73,16 @@ export function portfolioEventWhatsAppMessage(
     return `Olá, Felipe e Tamires! Eu ${saw} e gostaria de saber mais sobre os filmes de 15 anos.`;
   }
   return `Olá, Felipe e Tamires! Eu ${saw} e gostaria de saber mais sobre a cobertura audiovisual para o meu evento.`;
+}
+
+/**
+ * Página pública `/pacotes`. Mensagem contextual por tipo de evento + nível
+ * de pacote. Usa só termos públicos (nome do pacote, tipo de evento) — nunca
+ * dados internos, valores ou nomes de cliente.
+ */
+export function packageWhatsAppMessage(
+  eventNoun: string,
+  packageName: string,
+): string {
+  return `Olá, vim pelo site de vocês e gostaria de um orçamento do pacote ${packageName} para ${eventNoun}.`;
 }

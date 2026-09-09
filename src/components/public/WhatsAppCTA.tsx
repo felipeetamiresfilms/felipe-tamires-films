@@ -11,11 +11,14 @@ export function WhatsAppCTA({
   label,
   variant = "primary",
   className = "",
+  onClick,
 }: {
   message: string;
   label: string;
   variant?: "primary" | "secondary" | "link";
   className?: string;
+  /** Opcional — ex.: fechar o menu mobile ao tocar no link. */
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }) {
   const base =
     variant === "primary"
@@ -31,6 +34,7 @@ export function WhatsAppCTA({
       rel="noopener noreferrer"
       aria-label={`${label} — abre o WhatsApp`}
       className={`${base} ${className}`.trim()}
+      onClick={onClick}
     >
       <svg
         viewBox="0 0 24 24"

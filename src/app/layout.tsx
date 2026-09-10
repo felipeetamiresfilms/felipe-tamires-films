@@ -29,7 +29,9 @@ export const metadata: Metadata = {
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  icons: { icon: "/icon.svg" },
+  // Favicon / apple-touch: convenção de arquivo (`app/icon.png`,
+  // `app/apple-icon.png`) — o Next gera os <link> com type/sizes corretos.
+  // O `icon.svg` mora em `public/` só como logo da Organization no JSON-LD.
 };
 
 export default function RootLayout({

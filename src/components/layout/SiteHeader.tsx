@@ -22,7 +22,16 @@ export const PUBLIC_NAV = [
  */
 export function SiteHeader() {
   return (
-    <header className="relative w-full border-b border-hairline/60">
+    <header
+      // `body > *` (globals.css) força z-index:1 em cada filho direto do
+      // body — sem camada, então vence qualquer utilitário Tailwind. Isso
+      // empata o header com o <main>, que passa a cobrir o painel do menu
+      // mobile (posicionado com `absolute` a partir daqui). Subir o contexto
+      // de empilhamento do header resolve; inline para bater a regra sem
+      // camada e sem afetar outras rotas.
+      style={{ zIndex: 40 }}
+      className="relative w-full border-b border-hairline/60"
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-x-6 px-6 py-5 sm:px-8 2xl:max-w-[88rem]">
         <Link
           href="/"

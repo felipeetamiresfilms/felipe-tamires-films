@@ -74,8 +74,11 @@ body::after {
   );
 }
 
-/* conteúdo acima das camadas decorativas */
-body > * {
+/* conteúdo acima das camadas decorativas. Overlays portados para o <body>
+   (`data-overlay`, ex.: o player) ficam de fora: esta regra é unlayered e
+   venceria o `fixed`/`z-*` dos utilitários, jogando o overlay para o fim do
+   fluxo da página em vez de cobrir a tela. */
+body > *:not([data-overlay]) {
   position: relative;
   z-index: 1;
 }

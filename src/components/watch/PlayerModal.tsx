@@ -81,6 +81,7 @@ export function PlayerModal({
 
   return createPortal(
     <div
+      data-overlay
       className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/92 backdrop-blur-sm motion-safe:animate-[fade_.2s_ease-out] sm:p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -91,7 +92,10 @@ export function PlayerModal({
         role="dialog"
         aria-modal="true"
         aria-label={`${video.title} — ${eventTitle}`}
-        className="flex w-full max-w-6xl flex-col overflow-hidden border-hairline bg-raised sm:rounded-2xl sm:border"
+        // Largura limitada também pela altura da tela (16:9 + rodapé do
+        // diálogo + padding): em landscape no celular ou em notebooks baixos
+        // o diálogo cabe inteiro, sem cortar controles do player nem "Fechar".
+        className="flex w-full max-w-[min(72rem,calc((100dvh-7.5rem)*16/9))] flex-col sm:max-w-[min(72rem,calc((100dvh-10.5rem)*16/9))] overflow-hidden border-hairline bg-raised sm:rounded-2xl sm:border"
       >
         <div className="relative aspect-video w-full bg-ink">
           {iframeSrc ? (

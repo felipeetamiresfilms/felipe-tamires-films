@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Badge } from "@/components/ui/Badge";
 import { videoCategoryLabels } from "@/lib/labels";
-import type { WatchVideo } from "@/lib/events";
+import type { PrivateWatchVideo, WatchVideo } from "@/lib/events";
+import { DownloadLink } from "./DownloadLink";
 import { FilmPoster } from "./poster";
 
 /**
@@ -25,7 +26,7 @@ export function PlayerModal({
   eventTitle,
   onClose,
 }: {
-  video: WatchVideo | null;
+  video: WatchVideo | PrivateWatchVideo | null;
   eventTitle: string;
   onClose: () => void;
 }) {
@@ -118,7 +119,16 @@ export function PlayerModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-hairline px-5 py-4 sm:px-6">
+        {/* Com "Baixar filme", no celular as ações quebram para a linha de
+            baixo em vez de espremer o título. */}
+        <div
+          className={[
+            "flex items-center justify-between gap-x-4 gap-y-3 border-t border-hairline px-5 py-4 sm:px-6",
+            "downloadUrl" in video && video.downloadUrl
+              ? "flex-wrap sm:flex-nowrap"
+              : "",
+          ].join(" ")}
+        >
           <div className="flex min-w-0 flex-col gap-1.5">
             <Badge>{videoCategoryLabels[video.category]}</Badge>
             <p className="truncate font-display text-lg font-light text-bone">
@@ -128,14 +138,17 @@ export function PlayerModal({
               {eventTitle}
             </p>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-full border border-brass/50 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.22em] text-bone transition-colors hover:border-brass focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/60"
-          >
-            Fechar
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <DownloadLink video={video} />
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-full border border-brass/50 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.22em] text-bone transition-colors hover:border-brass focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/60"
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </div>
     </div>,

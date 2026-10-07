@@ -2,7 +2,8 @@
 
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
-import type { WatchVideo } from "@/lib/events";
+import type { PrivateWatchVideo, WatchVideo } from "@/lib/events";
+import { DownloadLink } from "./DownloadLink";
 import { FilmCard } from "./FilmCard";
 import { PlayerModal } from "./PlayerModal";
 
@@ -11,7 +12,8 @@ type Props = {
   metaLine: string;
   /** <CoverImage> renderizado no servidor, ou null para o fallback CSS. */
   cover: ReactNode;
-  videos: WatchVideo[];
+  /** Privado: `PrivateWatchVideo` (com download). Público: `WatchVideo`. */
+  videos: Array<WatchVideo | PrivateWatchVideo>;
   primaryVideoId: string | null;
   /** Frase do hero (privado: "Reviva esse dia."). "" oculta. */
   tagline?: string;
@@ -58,6 +60,9 @@ export function WatchClient({
     ? videos.filter((video) => video.id !== feature.id)
     : videos;
   const primary = primaryVideoId ?? feature?.id ?? null;
+  const primaryVideo = primary
+    ? videos.find((video) => video.id === primary) ?? null
+    : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -105,7 +110,7 @@ export function WatchClient({
             ) : null}
 
             {primary ? (
-              <div className="pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="button"
                   onClick={(event) => open(primary, event.currentTarget)}
@@ -119,6 +124,9 @@ export function WatchClient({
                   </span>
                   Assistir ao filme
                 </button>
+                {primaryVideo ? (
+                  <DownloadLink video={primaryVideo} size="lg" />
+                ) : null}
               </div>
             ) : null}
           </div>

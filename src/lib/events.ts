@@ -232,12 +232,35 @@ export interface WatchVideo {
   playable: boolean;
 }
 
+/**
+ * Vídeo da ENTREGA PRIVADA: o DTO seguro + o link de download.
+ *
+ * `WatchVideo` é compartilhado com o portfólio público (`lib/portfolio.ts`);
+ * por isso o `download_url` NÃO entra nele. Só `getWatchData` (slug privado)
+ * produz este tipo — o portfólio nem seleciona a coluna.
+ */
+export interface PrivateWatchVideo extends WatchVideo {
+  /** Link externo (ex.: Google Drive) preservado como cadastrado, ou `null`. */
+  downloadUrl: string | null;
+}
+
+/** Defesa em profundidade: só http(s) vira `href` (o Backstage já valida). */
+function safeDownloadUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface WatchData {
   event: Event;
   client: Client;
   /** signed URL da capa, ou `null` (usar fallback cinematográfico). */
   coverUrl: string | null;
-  videos: WatchVideo[];
+  videos: PrivateWatchVideo[];
   /** `main_film`, senão o primeiro vídeo — alvo do CTA "Assistir ao filme". */
   primaryVideoId: string | null;
 }
@@ -255,7 +278,7 @@ export async function getWatchData(slug: string): Promise<WatchData | null> {
     ? await signMediaObject(base.event.coverImageUrl)
     : null;
 
-  const videos: WatchVideo[] = base.videos.map((video) => ({
+  const videos: PrivateWatchVideo[] = base.videos.map((video) => ({
     id: video.id,
     title: video.title,
     description: video.description,
@@ -265,6 +288,7 @@ export async function getWatchData(slug: string): Promise<WatchData | null> {
     posterUrl: resolvePosterUrl(video),
     embedUrl: video.embedUrl,
     playable: video.provider === "youtube" && Boolean(video.embedUrl),
+    downloadUrl: safeDownloadUrl(video.downloadUrl),
   }));
 
   const mainFilm = videos.find((video) => video.category === "main_film");

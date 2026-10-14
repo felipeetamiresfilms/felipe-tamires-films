@@ -3,6 +3,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { RevealScanner } from "@/components/motion/RevealScanner";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ConsentManager } from "@/components/consent/ConsentManager";
+import { AnalyticsManager } from "@/components/consent/AnalyticsManager";
 import { SITE_NAME, SITE_PHONE_E164, SITE_URL } from "@/config/site";
 
 /**
@@ -73,10 +75,14 @@ export default function PublicLayout({
   return (
     <>
       <JsonLd data={IDENTITY_JSON_LD} />
+      {/* 1º no DOM: quem navega por teclado encontra o banner antes do
+          conteúdo. Visualmente é fixo — a posição no DOM não muda o layout. */}
+      <ConsentManager />
       <SiteHeader />
       <main className="flex flex-1 flex-col">{children}</main>
       <SiteFooter />
       <RevealScanner />
+      <AnalyticsManager />
     </>
   );
 }

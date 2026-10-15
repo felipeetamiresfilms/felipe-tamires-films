@@ -8,11 +8,12 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/backstage-ft/clientes", label: "Clientes" },
   { href: "/backstage-ft/eventos", label: "Eventos" },
   { href: "/backstage-ft/curadoria", label: "Curadoria" },
+  { href: "/backstage-ft/inteligencia", label: "Inteligência" },
 ];
 
 /**
  * Menu do painel: horizontal no desktop, mesma linha (só que rolável/compacta)
- * no celular. Sem sidebar, sem template genérico — três destinos e pronto.
+ * no celular. Sem sidebar, sem template genérico — poucos destinos e pronto.
  */
 export function BackstageNav({ className = "" }: { className?: string }) {
   const pathname = usePathname();
@@ -20,7 +21,9 @@ export function BackstageNav({ className = "" }: { className?: string }) {
   return (
     <nav
       className={[
-        "flex items-center gap-1 text-xs uppercase tracking-[0.2em]",
+        // No celular os itens não cabem numa linha: o menu rola na horizontal
+        // (sem barra visível) em vez de alargar a página inteira.
+        "flex min-w-0 max-w-full items-center gap-1 overflow-x-auto text-xs uppercase tracking-[0.2em] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       ].join(" ")}
     >
@@ -35,7 +38,7 @@ export function BackstageNav({ className = "" }: { className?: string }) {
             href={link.href}
             aria-current={active ? "page" : undefined}
             className={[
-              "min-h-9 rounded-full px-3 py-2 transition-colors",
+              "min-h-9 shrink-0 whitespace-nowrap rounded-full px-3 py-2 transition-colors",
               active
                 ? "bg-raised/70 text-bone"
                 : "text-bone-dim hover:text-bone",

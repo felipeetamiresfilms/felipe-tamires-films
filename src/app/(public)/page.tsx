@@ -15,6 +15,7 @@ import { HeroBackdropVideo } from "@/components/public/HeroBackdropVideo";
 import { HomeValueSection } from "@/components/public/HomeValueSection";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeCurationSection } from "@/components/public/HomeCurationSection";
+import { HomeBehindSection } from "@/components/public/HomeBehindSection";
 import { ContactBanner } from "@/components/public/ContactBanner";
 import { ctaPrimaryClass } from "@/components/public/cta";
 import { OG_BASE } from "@/config/seo";
@@ -258,18 +259,29 @@ export default async function HomePage() {
         <div className="flex flex-col gap-16 py-16 sm:gap-24 sm:py-24">
           {rows.map((row, i) => (
             <Fragment key={row.key}>
+              {row.key === "recent" ? <HomeBehindSection /> : null}
               <Row
                 id={row.id}
                 title={row.title}
                 events={row.events}
                 packagesCta={row.packagesCta}
               />
-              {i === 0 ? <HomeValueSection /> : null}
+              {i === 0 ? (
+                <>
+                  <HomeValueSection />
+                  <HomeAboutSection />
+                </>
+              ) : null}
             </Fragment>
           ))}
-          {rows.length === 0 ? <HomeValueSection /> : null}
-
-          <HomeAboutSection />
+          {rows.length === 0 ? (
+            <>
+              <HomeValueSection />
+              <HomeAboutSection />
+            </>
+          ) : null}
+          {/* sem fileira "Histórias recentes": entra logo após o catálogo */}
+          {rows.some((r) => r.key === "recent") ? null : <HomeBehindSection />}
 
           <HomeCurationSection />
 

@@ -9,12 +9,19 @@ import { ctaPrimaryClass, ctaSecondaryClass } from "./cta";
 export function WhatsAppCTA({
   message,
   label,
+  contactLocation,
   variant = "primary",
   className = "",
   onClick,
 }: {
   message: string;
   label: string;
+  /**
+   * Ponto de contato para o evento `contact_click` (ex.: "home_hero").
+   * Obrigatório: todo CTA de WhatsApp da FTF é uma conversão rastreável.
+   * Ver `CONTACT_LOCATION_LABELS` em lib/analytics/contact.ts.
+   */
+  contactLocation: string;
   variant?: "primary" | "secondary" | "link";
   className?: string;
   /** Opcional — ex.: fechar o menu mobile ao tocar no link. */
@@ -34,6 +41,8 @@ export function WhatsAppCTA({
       rel="noopener noreferrer"
       aria-label={`${label} — abre o WhatsApp`}
       className={`${base} ${className}`.trim()}
+      data-contact-location={contactLocation}
+      data-contact-label={label}
       onClick={onClick}
     >
       <svg

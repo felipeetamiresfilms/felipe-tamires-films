@@ -135,6 +135,8 @@ export type GaRow = {
 
 export type GaReport = {
   rows?: GaRow[];
+  /** Presente quando a consulta pede `metricAggregations: ["TOTAL"]`. */
+  totals?: GaRow[];
   metadata?: {
     subjectToThresholding?: boolean;
     dataLossFromOtherRow?: boolean;

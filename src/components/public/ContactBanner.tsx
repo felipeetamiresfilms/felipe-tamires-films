@@ -14,6 +14,7 @@ export function ContactBanner({
   text,
   message,
   ctaLabel,
+  contactLocation,
   secondary,
 }: {
   eyebrow?: string;
@@ -21,6 +22,8 @@ export function ContactBanner({
   text: string;
   message: string;
   ctaLabel: string;
+  /** Ponto de contato do `contact_click` (ex.: "home_final_cta"). */
+  contactLocation: string;
   secondary?: { label: string; href: string };
 }) {
   return (
@@ -44,7 +47,12 @@ export function ContactBanner({
           {text}
         </p>
         <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row">
-          <WhatsAppCTA message={message} label={ctaLabel} variant="primary" />
+          <WhatsAppCTA
+            message={message}
+            label={ctaLabel}
+            contactLocation={contactLocation}
+            variant="primary"
+          />
           {secondary ? (
             <Link href={secondary.href} className={ctaSecondaryClass}>
               {secondary.label}

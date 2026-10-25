@@ -74,3 +74,45 @@ export type DashboardResult =
   | { status: "error"; kind: DashboardErrorKind }
   | { status: "empty"; data: DashboardData }
   | { status: "ok"; data: DashboardData };
+
+/**
+ * Conversões e contatos — evento `contact_click` (clique num botão que abre
+ * o WhatsApp). Clique = intenção de contato, não mensagem enviada.
+ *
+ * "clicks" é contagem de EVENTOS; "sessions" é contagem de SESSÕES com ao
+ * menos um clique. Nunca se usa uma no lugar da outra.
+ */
+export type ContactRow = { label: string; clicks: number; sessions: number };
+
+export type ContactsData = {
+  period: Period;
+  /** Eventos `contact_click` no período. */
+  clicks: number;
+  /** Sessões com ao menos um `contact_click`. */
+  contactSessions: number;
+  /** Todas as sessões do mesmo período (denominador da taxa). */
+  totalSessions: number;
+  /** contactSessions / totalSessions (0–1); null sem sessões no período. */
+  contactRate: number | null;
+  /** Grupo de origem com mais sessões com contato; null sem contatos. */
+  topSource: { label: string; sessions: number } | null;
+  /** Por grupo de origem (ordem fixa de SOURCE_GROUPS). */
+  bySource: ContactRow[];
+  /** Por página do clique. Uma sessão pode aparecer em mais de uma página. */
+  byPage: ContactRow[];
+  /** Por campanha UTM da sessão. */
+  byCampaign: (ContactRow & { sourceMedium: string })[];
+  /**
+   * Por ponto de contato (dimensão personalizada `contact_location`).
+   * "unavailable" enquanto a dimensão não estiver registrada no GA4.
+   */
+  byButton: { status: "ok"; rows: { location: string; clicks: number }[] } | { status: "unavailable" };
+  notes: { thresholded: boolean; otherRow: boolean; sampled: boolean };
+  fetchedAt: string;
+};
+
+export type ContactsResult =
+  | { status: "not_configured" }
+  | { status: "error"; kind: DashboardErrorKind }
+  | { status: "empty"; data: ContactsData }
+  | { status: "ok"; data: ContactsData };

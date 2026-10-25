@@ -32,6 +32,8 @@ const PURPOSES = process.env.FTF_PURPOSES ?? (MODE === "ga-only" ? "a" : "ae");
 //    ANTES do gtag('set') da página (mesma ordem de processamento do GTM);
 //  - "FTF - GA4 Page View": evento page_view em ftf_page_view com
 //    page_tracked == true; parâmetros page_location/page_path/page_referrer/page_title.
+//  - "FTF - GA4 Contact Click": evento contact_click em ftf_contact_click;
+//    parâmetros contact_channel/contact_location/contact_label/page_path/page_title.
 const GTM_STUB = `(function(){var ID='${GA4}',dl=window.dataLayer=window.dataLayer||[],i=0;
 function args(){return arguments}
 var init=dl.findIndex(function(e){return e&&e.event==='gtm.js'});
@@ -40,7 +42,8 @@ var s=document.createElement('script');s.async=true;s.src='https://www.googletag
 function gtag(){dl.push(arguments)}
 window.__ftfStubPageViews=0;
 function scan(){for(;i<dl.length;i++){var e=dl[i];if(e&&e.event==='ftf_page_view'&&String(e.page_tracked)==='true'){
-gtag('event','page_view',{send_to:ID,page_location:e.page_location,page_path:e.page_path,page_referrer:e.page_referrer,page_title:e.page_title});window.__ftfStubPageViews++;}}}
+gtag('event','page_view',{send_to:ID,page_location:e.page_location,page_path:e.page_path,page_referrer:e.page_referrer,page_title:e.page_title});window.__ftfStubPageViews++;}if(e&&e.event==='ftf_contact_click'){gtag('event','contact_click',{send_to:ID,contact_channel:e.contact_channel,contact_location:e.contact_location,contact_label:e.contact_label,page_path:e.page_path,page_title:e.page_title});}
+}}
 scan();setInterval(scan,50);})();`;
 
 const TRACKER = /googletagmanager\.com|google-analytics\.com|analytics\.google\.com|clarity\.ms|doubleclick\.net|bing\.com|google\.com\/(ccm|g\/collect|pagead)/i;
@@ -276,7 +279,8 @@ await sleep(4000);
 r = await result();
 const em = gaEvents(r.collects).map((e) => e.en);
 check("Métrica otimizada: só page_view (sem scroll/click/form/video/download/histórico)", em.filter((n) => n === "page_view").length === 1 && !em.some((n) => /^(scroll|click|file_download|form_start|form_submit|video_|view_search_results)/.test(n)), JSON.stringify(em));
-check("Clique no WhatsApp: mensagem/URL do wa.me não aparece em nenhuma coleta", !r.collects.some((c) => /wa\.me|whatsapp/i.test(safe(c.url) + c.body)));
+// `contact_channel=whatsapp` (evento contact_click) é esperado; URL, número e mensagem não.
+check("Clique no WhatsApp: mensagem/URL/número do wa.me não aparece em nenhuma coleta", !r.collects.some((c) => /wa\.me|api\.whatsapp|5554997006436|text=|ol[aá],/i.test(safe(c.url) + c.body)));
 
 // 4. Só Análise de experiência
 await scenario(); await clearTrackerState(); await setConsent(false, true);
@@ -381,6 +385,45 @@ await goto("/", 3000);
 check("Nova finalidade: escolha antiga (p=a) é renovada — banner volta e nada carrega", (await banner()) && (await noGlobals()));
 r = await result();
 check("Nova finalidade: 0 scripts e 0 coletas até nova escolha", r.scripts.length === 0 && r.collects.length === 0);
+
+// 3e. Clique para contato (WhatsApp), com consentimento de Estatísticas.
+// Um listener de bolha (roda DEPOIS do nosso, que é de captura) registra se
+// alguém bloqueou a navegação e então a cancela — o teste não abre o wa.me.
+const NAV_PROBE = `window.__nav=[];document.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&/wa\\.me/.test(a.href)){window.__nav.push({prevented:e.defaultPrevented,target:a.target});e.preventDefault();}})`;
+const contactEvents = () => ev(`JSON.stringify((window.dataLayer||[]).filter(e=>e&&e.event==='ftf_contact_click').map(e=>Object.fromEntries(Object.entries(e).filter(([k])=>!k.startsWith('gtm.')))))`);
+await scenario(); await clearTrackerState(); await setConsent(true, false);
+await goto("/pacotes", 4000);
+await ev(NAV_PROBE);
+await ev(`document.querySelector('a[data-contact-location^="pacotes_"]').click()`);
+await sleep(300);
+let contacts = JSON.parse(await contactEvents());
+check("Contato: 1 clique = 1 ftf_contact_click, só os parâmetros previstos", contacts.length === 1 &&
+  JSON.stringify(Object.keys(contacts[0]).sort()) === JSON.stringify(["contact_channel", "contact_label", "contact_location", "event", "page_path", "page_title"]) &&
+  contacts[0].contact_channel === "whatsapp" && /^pacotes_[a-z_]+$/.test(contacts[0].contact_location) &&
+  contacts[0].page_path === "/pacotes" && contacts[0].page_title === "Pacotes", JSON.stringify(contacts));
+check("Contato: sem número, mensagem ou nomes no evento", !/5554997006436|wa\.me|ol[aá]|text=/i.test(JSON.stringify(contacts)));
+const nav = JSON.parse(await ev(`JSON.stringify(window.__nav)`));
+check("Contato: navegação para o WhatsApp não é bloqueada (nova aba)", nav.length === 1 && nav[0].prevented === false && nav[0].target === "_blank", JSON.stringify(nav));
+await ev(`document.querySelector('header a[href="/filmes"]').click()`);
+await sleep(2500);
+contacts = JSON.parse(await contactEvents());
+check("Contato: link de navegação não conta como contato", contacts.length === 1, `${contacts.length}`);
+r = await result();
+const contactHits = r.collects.filter((c) => /\/g\/collect/.test(c.url)).flatMap(parseGa).filter((e) => e.en === "contact_click");
+check("Contato: 1 hit GA4 contact_click com canal e ponto de contato", contactHits.length === 1 &&
+  contactHits[0]["ep.contact_channel"] === "whatsapp" && /^pacotes_/.test(contactHits[0]["ep.contact_location"] ?? ""),
+  JSON.stringify(contactHits.map((e) => ({ en: e.en, ch: e["ep.contact_channel"], loc: e["ep.contact_location"], label: e["ep.contact_label"] }))));
+
+// 3f. Clique para contato sem consentimento
+await scenario(); await clearTrackerState(); await setConsent(false, false);
+await goto("/pacotes", 3000);
+await ev(NAV_PROBE);
+await ev(`document.querySelector('a[data-contact-location^="pacotes_"]').click()`);
+await sleep(300);
+const navDenied = JSON.parse(await ev(`JSON.stringify(window.__nav)`));
+check("Contato sem consentimento: nada enfileirado, navegação livre", (await noGlobals()) && navDenied.length === 1 && navDenied[0].prevented === false, JSON.stringify(navDenied));
+r = await result();
+check("Contato sem consentimento: 0 scripts, 0 coletas", r.scripts.length === 0 && r.collects.length === 0);
 
 // 12. GPC
 await scenario(); await clearTrackerState(); await setConsent(null);

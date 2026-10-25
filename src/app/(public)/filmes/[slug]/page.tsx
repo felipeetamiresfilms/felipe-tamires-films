@@ -145,6 +145,7 @@ export default async function PortfolioEventPage({
 
       <div className="mx-auto w-full max-w-6xl px-6 pb-20 sm:px-8 2xl:max-w-[88rem]">
         <ContactBanner
+          contactLocation="filme_final_cta"
           title="Imaginou a sua história contada assim?"
           text="Cada evento tem seu próprio ritmo, suas pessoas e sua história. Se vocês estão planejando o de vocês, a gente quer conhecer."
           message={portfolioEventWhatsAppMessage(event.eventType, event.title)}

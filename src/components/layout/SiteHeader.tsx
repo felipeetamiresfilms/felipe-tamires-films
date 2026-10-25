@@ -52,6 +52,7 @@ export function SiteHeader() {
             </Link>
           ))}
           <WhatsAppCTA
+            contactLocation="header"
             variant="link"
             message={WHATSAPP_MESSAGES.header}
             label="Falar conosco"

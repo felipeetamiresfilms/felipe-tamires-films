@@ -1,5 +1,6 @@
 import type { ExperienceConfig, StatisticsConfig } from "./config";
 import type { PageContext } from "./page";
+import { CONTACT_DATALAYER_EVENT, type ContactClick } from "./contact";
 
 /**
  * Carga e descarga das ferramentas opcionais. Só o `AnalyticsManager` chama
@@ -100,6 +101,16 @@ export function sendPageView(page: PageContext): void {
     page_tracked: true,
     ...page,
   });
+}
+
+/**
+ * Um clique para contato. Só existe dataLayer com o GTM carregado — ou seja,
+ * com consentimento de Estatísticas em rota da allowlist; após a retirada
+ * (cerca instalada) nada mais é empurrado.
+ */
+export function sendContactClick(click: ContactClick): void {
+  if (!state().gtm || state().fenced) return;
+  window.dataLayer?.push({ event: CONTACT_DATALAYER_EVENT, ...click });
 }
 
 /** Injeta o Clarity uma única vez por documento. */

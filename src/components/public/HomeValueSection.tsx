@@ -69,6 +69,7 @@ export function HomeValueSection() {
 
         <div data-reveal="up" className="flex flex-col gap-3 sm:flex-row">
           <WhatsAppCTA
+            contactLocation="home_como_funciona"
             message={WHATSAPP_MESSAGES.howItWorks}
             label="Converse com a gente"
             variant="primary"

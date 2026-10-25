@@ -175,6 +175,85 @@ Nenhum destes itens pode existir no contêiner:
    duplicatas. No GA4 → DebugView, os títulos devem ser genéricos ("Início",
    "Filmes", "Filme"…).
 
+### 2.8 Clique para contato (`contact_click`)
+Quando o visitante toca num botão de WhatsApp da FTF, o site envia ao
+`dataLayer`, apenas se o GTM estiver carregado (ou seja, com Estatísticas
+autorizadas e numa rota da allowlist):
+
+```js
+{ event: "ftf_contact_click",
+  contact_channel,   // "whatsapp"
+  contact_location,  // ex.: "home_hero", "pacotes_memoria", "filme_final_cta"
+  contact_label,     // texto do botão em slug, ex.: "falar_conosco"
+  page_path, page_title } // mesmos valores higienizados do page_view
+```
+
+Não vão para o evento: o número, a mensagem pré-preenchida, nomes nem
+títulos de filmes. Os pontos de contato estão em `CONTACT_LOCATION_LABELS`
+([src/lib/analytics/contact.ts](../src/lib/analytics/contact.ts)).
+
+**Variáveis**: crie como Variável da camada de dados, versão 2
+(`DLV - page_path` e `DLV - page_title` já existem):
+
+| Nome da variável | Nome da variável da camada de dados |
+|---|---|
+| `DLV - contact_channel` | `contact_channel` |
+| `DLV - contact_location` | `contact_location` |
+| `DLV - contact_label` | `contact_label` |
+
+**Acionador**: nome **`FTF - Contact Click`**
+- Tipo: **Evento personalizado**
+- Nome do evento: `ftf_contact_click`, sem regex
+- Disparado em: **Todos os eventos personalizados**
+
+**Tag**: nome **`FTF - GA4 Contact Click`**
+- Tipo: **Google Analytics: evento do GA4**. ID de métricas: `G-75L5HQTG1E`
+- Nome do evento: `contact_click`
+- Parâmetros do evento:
+
+  | Parâmetro | Valor |
+  |---|---|
+  | `contact_channel` | `{{DLV - contact_channel}}` |
+  | `contact_location` | `{{DLV - contact_location}}` |
+  | `contact_label` | `{{DLV - contact_label}}` |
+  | `page_path` | `{{DLV - page_path}}` |
+  | `page_title` | `{{DLV - page_title}}` |
+
+- Consentimento: **Exigir consentimento adicional**: `analytics_storage`
+- Opções de disparo da tag: **Uma vez por evento**
+- Sequenciamento de tags: **Disparar uma tag antes**: `FTF - Google Tag`.
+  Não disparar se ela falhar ou estiver pausada.
+- Acionamento: `FTF - Contact Click`
+
+Não altere as tags de page_view nem crie acionadores do tipo "Cliques" (ver
+2.6): o clique já chega pronto pelo `dataLayer`.
+
+**GA4 → Administrador → Definições personalizadas → Criar dimensão
+personalizada** (escopo **Evento**):
+
+| Nome da dimensão | Parâmetro do evento | Necessária para |
+|---|---|---|
+| Ponto de contato | `contact_location` | relatório "Contatos por botão" do Backstage |
+| Canal de contato | `contact_channel` | explorações no GA4 (opcional) |
+| Rótulo do contato | `contact_label` | explorações no GA4 (opcional) |
+
+Registre **antes** de publicar o contêiner: o GA4 não preenche dimensões
+retroativamente, e cliques anteriores ao registro aparecem como `(not set)`.
+Opcional: em Administrador → Eventos, marque `contact_click` como **evento
+principal** (key event). O Backstage não depende disso.
+
+**Testar antes de publicar** (mesmo fluxo de 2.7): aceite Estatísticas, vá a
+`/pacotes` e toque num botão de pacote. No Tag Assistant deve aparecer um único
+`ftf_contact_click` com `FTF - GA4 Contact Click` disparada, e o WhatsApp deve
+abrir normalmente. No GA4 → DebugView, confira `contact_click` com os cinco
+parâmetros. Com Estatísticas recusadas, nada deve aparecer.
+
+**No Backstage** (Inteligência → "Conversões e contatos"): os números começam
+a aparecer depois da publicação, com o atraso normal do GA4 (horas; às vezes
+até 48 h). O relatório "Contatos por botão" fica indisponível até a dimensão
+`contact_location` estar registrada. Depois do registro, ele aparece em até
+15 minutos (tempo do cache).
+
 ---
 
 ## 3. Microsoft Clarity — `yxo7ozj3ak`

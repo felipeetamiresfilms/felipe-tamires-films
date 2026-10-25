@@ -94,6 +94,7 @@ export function MobileNav({
               </Link>
             ))}
             <WhatsAppCTA
+              contactLocation="menu_mobile"
               variant="link"
               message={whatsappMessage}
               label="Falar conosco"

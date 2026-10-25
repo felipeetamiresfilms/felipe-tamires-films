@@ -210,6 +210,7 @@ export default async function HomePage() {
                   Conhecer esta história
                 </Link>
                 <WhatsAppCTA
+                  contactLocation="home_hero"
                   message={heroFeaturedWhatsAppMessage(hero.title)}
                   label="Quero um filme assim"
                   variant="secondary"
@@ -245,6 +246,7 @@ export default async function HomePage() {
                 Explorar nossos filmes
               </Link>
               <WhatsAppCTA
+                contactLocation="home_hero"
                 message={WHATSAPP_MESSAGES.homeGeneric}
                 label="Falar com Felipe & Tamires"
                 variant="secondary"
@@ -286,6 +288,7 @@ export default async function HomePage() {
           <HomeCurationSection />
 
           <ContactBanner
+            contactLocation="home_final_cta"
             eyebrow="Vamos conversar"
             title="Está planejando o seu evento?"
             text="Conte pra gente o que estão preparando. A gente quer entender a história, o local, a data e o que vocês imaginam para esse dia."

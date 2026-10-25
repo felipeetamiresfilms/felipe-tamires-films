@@ -53,6 +53,7 @@ export function HomeAboutSection() {
           </div>
           <div className="pt-1">
             <WhatsAppCTA
+              contactLocation="home_sobre"
               message={WHATSAPP_MESSAGES.about}
               label="Conte pra gente sobre o seu evento"
               variant="secondary"

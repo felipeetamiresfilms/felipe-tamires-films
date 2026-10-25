@@ -68,6 +68,7 @@ export default async function PacotesPage({
             </p>
             <div className="pt-3">
               <WhatsAppCTA
+                contactLocation="pacotes_evento_diferente"
                 message={WHATSAPP_MESSAGES.packagesOther}
                 label="Falar com a gente"
                 variant="secondary"

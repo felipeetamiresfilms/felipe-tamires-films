@@ -310,6 +310,7 @@ function PackageCard({
 
       <div className="mt-auto pt-2">
         <WhatsAppCTA
+          contactLocation={`pacotes_${pkg.tier}`}
           message={packageWhatsAppMessage(eventNoun, pkg.name)}
           label={TIER_CTA_LABEL[pkg.tier]}
           variant={featured ? "primary" : "secondary"}

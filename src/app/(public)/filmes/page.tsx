@@ -71,6 +71,7 @@ export default async function FilmesPage() {
         </p>
 
         <ContactBanner
+          contactLocation="filmes_final_cta"
           title="Quer um filme assim para a sua história?"
           text="Cada evento tem o seu ritmo e as suas pessoas. Se vocês estão planejando o de vocês, a gente quer conhecer."
           message={WHATSAPP_MESSAGES.filmsLibrary}

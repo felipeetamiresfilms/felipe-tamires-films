@@ -10,11 +10,14 @@ import {
 } from "@/lib/analytics/consent";
 import { ANALYTICS_CONFIGURED, EXPERIENCE, STATISTICS } from "@/lib/analytics/config";
 import { buildPageContext, sanitizeReferrer } from "@/lib/analytics/page";
+import { createContactClickHandler } from "@/lib/analytics/contact";
+import { SITE_CONFIG } from "@/config/site";
 import { isTrackedPath } from "@/lib/analytics/routes";
 import {
   clearTrackerCookies,
   loadClarity,
   loadGtm,
+  sendContactClick,
   sendPageView,
   shutdownTrackers,
   trackersLoaded,
@@ -114,6 +117,37 @@ function AnalyticsRuntime() {
       window.removeEventListener("click", onClick, true);
       window.removeEventListener("popstate", onPopState, true);
       window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
+  // Cliques para contato (WhatsApp/e-mail marcados com data-contact-location).
+  // Captura em `window`, sem preventDefault: só observa o clique.
+  useEffect(() => {
+    if (!STATISTICS) return;
+    const onContact = createContactClickHandler({
+      canSend: () =>
+        trackersLoaded().gtm &&
+        readConsent()?.analytics === true &&
+        isTrackedPath(window.location.pathname),
+      findTarget: (target) => {
+        const anchor = (target as Element | null)?.closest?.("a[href][data-contact-location]");
+        if (!(anchor instanceof HTMLAnchorElement)) return null;
+        return {
+          href: anchor.href,
+          location: anchor.dataset.contactLocation ?? null,
+          label: anchor.dataset.contactLabel ?? null,
+        };
+      },
+      pageContext: () =>
+        buildPageContext({ href: window.location.href, referrer: "", notFound: notFoundRendered() }),
+      send: sendContactClick,
+      whatsappNumber: SITE_CONFIG.whatsappNumber,
+    });
+    window.addEventListener("click", onContact, true);
+    window.addEventListener("auxclick", onContact, true);
+    return () => {
+      window.removeEventListener("click", onContact, true);
+      window.removeEventListener("auxclick", onContact, true);
     };
   }, []);
 

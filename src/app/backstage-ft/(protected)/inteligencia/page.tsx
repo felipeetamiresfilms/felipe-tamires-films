@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { loadBackstageAccess } from "@/lib/admin/auth";
 import { getDashboard } from "@/lib/intelligence/dashboard";
 import { DEFAULT_PERIOD, PERIODS, type Period } from "@/lib/intelligence/types";
 import { IntelligenceHeader } from "@/components/backstage/intelligence/IntelligenceHeader";
 import { DashboardView, PeriodFilter } from "@/components/backstage/intelligence/DashboardView";
+import { ContactsSection, ContactsSkeleton } from "@/components/backstage/intelligence/ContactsView";
 
 export const metadata: Metadata = { title: "Inteligência" };
 
@@ -40,6 +42,11 @@ export default async function InteligenciaPage({
         />
         {result.status !== "not_configured" ? <PeriodFilter period={period} /> : null}
         <DashboardView result={result} />
+        {result.status !== "not_configured" ? (
+          <Suspense key={period} fallback={<ContactsSkeleton />}>
+            <ContactsSection period={period} />
+          </Suspense>
+        ) : null}
       </div>
     </section>
   );

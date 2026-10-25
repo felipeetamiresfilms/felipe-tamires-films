@@ -1,6 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { GaDataError, batchRunReports, readCredentials, type GaReport } from "./ga-data";
+import { SOURCE_GROUPS, sourceGroupOf } from "./sources";
 import type {
   DashboardData,
   DashboardResult,
@@ -34,13 +35,19 @@ function ranges(period: DaysPeriod) {
   };
 }
 
+/** Intervalo do período selecionado (o mesmo para tráfego e contatos). */
+export function currentRange(period: Period) {
+  return period === "hoje"
+    ? { startDate: "today", endDate: "today", name: "atual" }
+    : ranges(period).current;
+}
+
 function buildRequests(period: Period): object[] {
   // "today" é resolvido pelo GA4 no fuso horário da propriedade. Dia em
   // andamento NÃO é comparado com um dia completo (variação enganosa).
   const today = period === "hoje";
-  const { current, previous } = today
-    ? { current: { startDate: "today", endDate: "today", name: "atual" }, previous: null }
-    : ranges(period);
+  const current = currentRange(period);
+  const previous = today ? null : ranges(period).previous;
   return [
     // 0. Totais do período atual (e do anterior, quando há comparação justa).
     {
@@ -185,26 +192,6 @@ const CHANNEL_LABELS: Record<string, string> = {
   "Mobile Push Notifications": "Notificações push",
   Unassigned: "Não atribuído",
 };
-
-/** Ordem fixa dos grupos de origem pedidos pela FTF. */
-export const SOURCE_GROUPS = [
-  "Google",
-  "Instagram",
-  "Facebook",
-  "WhatsApp",
-  "Acesso direto",
-  "Outras fontes",
-] as const;
-
-export function sourceGroupOf(source: string): (typeof SOURCE_GROUPS)[number] {
-  const s = source.toLowerCase();
-  if (s === "(direct)") return "Acesso direto";
-  if (s.includes("google")) return "Google";
-  if (s.includes("instagram") || s === "ig") return "Instagram";
-  if (s.includes("facebook") || s === "fb" || s === "meta") return "Facebook";
-  if (s.includes("whatsapp") || s === "wa" || s === "wa.me") return "WhatsApp";
-  return "Outras fontes";
-}
 
 function parseAcquisition(report: GaReport | undefined) {
   const channels = new Map<string, number>();

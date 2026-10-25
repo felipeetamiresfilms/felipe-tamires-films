@@ -21,7 +21,7 @@ function duration(seconds: number | null) {
   return m > 0 ? `${m} min ${String(s).padStart(2, "0")} s` : `${s} s`;
 }
 
-const ERROR_TEXT: Record<Extract<DashboardResult, { status: "error" }>["kind"], { title: string; body: string }> = {
+export const ERROR_TEXT: Record<Extract<DashboardResult, { status: "error" }>["kind"], { title: string; body: string }> = {
   auth: {
     title: "Não foi possível autenticar no Google",
     body: "A conta de serviço foi recusada. Confira GA4_CLIENT_EMAIL e GA4_PRIVATE_KEY no ambiente do servidor.",
@@ -44,7 +44,7 @@ const ERROR_TEXT: Record<Extract<DashboardResult, { status: "error" }>["kind"], 
   },
 };
 
-function StateCard({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
+export function StateCard({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-6 sm:p-8">
       <p className="text-xs uppercase tracking-[0.28em] text-brass">{eyebrow}</p>
@@ -54,7 +54,7 @@ function StateCard({ eyebrow, title, children }: { eyebrow: string; title: strin
   );
 }
 
-function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
+export function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={`flex flex-col gap-5 rounded-xl border border-hairline bg-surface p-5 sm:p-6 ${className}`}>
       <h2 className="text-xs uppercase tracking-[0.28em] text-brass">{title}</h2>

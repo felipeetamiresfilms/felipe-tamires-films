@@ -1,21 +1,18 @@
-import { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPortfolioHome, type PublicPortfolioCard } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
-import { formatEventDate } from "@/lib/format";
+import { displayTitle, formatEventDate } from "@/lib/format";
 import {
   WHATSAPP_MESSAGES,
   heroFeaturedWhatsAppMessage,
 } from "@/config/site";
-import { Wordmark } from "@/components/ui/Wordmark";
 import { EventCard } from "@/components/public/EventCard";
 import { WhatsAppCTA } from "@/components/public/WhatsAppCTA";
 import { HeroBackdropVideo } from "@/components/public/HeroBackdropVideo";
 import { HomeValueSection } from "@/components/public/HomeValueSection";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeCurationSection } from "@/components/public/HomeCurationSection";
-import { HomeBehindSection } from "@/components/public/HomeBehindSection";
 import { ContactBanner } from "@/components/public/ContactBanner";
 import { ctaPrimaryClass } from "@/components/public/cta";
 import { OG_BASE } from "@/config/seo";
@@ -111,14 +108,18 @@ function Row({ id, title, events, packagesCta }: Omit<RowSpec, "key">) {
         <Link
           href={packagesCta.href}
           data-reveal="up"
-          className="group inline-flex items-center gap-2 self-start text-xs uppercase tracking-[0.24em] text-brass-soft transition-colors hover:text-brass"
+          className="group self-start text-xs uppercase leading-relaxed tracking-[0.24em] text-brass-soft transition-colors hover:text-brass"
         >
-          Conheça nossos pacotes de {packagesCta.noun}
-          <span
-            aria-hidden="true"
-            className="transition-transform duration-300 ease-out motion-safe:group-hover:translate-x-[3px]"
-          >
-            →
+          Conheça nossos pacotes de{" "}
+          {/* a seta nunca quebra sozinha para a linha de baixo */}
+          <span className="whitespace-nowrap">
+            {packagesCta.noun}
+            <span
+              aria-hidden="true"
+              className="ml-2 inline-block transition-transform duration-300 ease-out motion-safe:group-hover:translate-x-[3px]"
+            >
+              →
+            </span>
           </span>
         </Link>
       ) : null}
@@ -128,6 +129,16 @@ function Row({ id, title, events, packagesCta }: Omit<RowSpec, "key">) {
 
 export default async function HomePage() {
   const { hero, spotlight, categories, recent } = await getPortfolioHome();
+
+  // "Histórias recentes" só mostra o que as fileiras acima ainda não
+  // mostraram — as coleções por tipo já trazem todos os filmes, então
+  // repetir a lista inteira só alongava a página antes do convite final.
+  const shownAbove = new Set(
+    [...spotlight, ...categories.flatMap((c) => c.events)].map(
+      (e) => e.publicSlug,
+    ),
+  );
+  const unseenRecent = recent.filter((e) => !shownAbove.has(e.publicSlug));
 
   const rows: RowSpec[] = [
     ...(spotlight.length
@@ -145,8 +156,8 @@ export default async function HomePage() {
           : undefined,
       };
     }),
-    ...(recent.length >= 2
-      ? [{ key: "recent", title: "Histórias recentes", events: recent }]
+    ...(unseenRecent.length >= 2
+      ? [{ key: "recent", title: "Histórias recentes", events: unseenRecent }]
       : []),
   ];
 
@@ -184,7 +195,7 @@ export default async function HomePage() {
                 Em destaque
               </span>
               <h1 className="font-display font-light leading-[1.03] text-bone [font-size:clamp(2.25rem,6vw,5rem)]">
-                {hero.title}
+                {displayTitle(hero.title)}
               </h1>
               {heroMeta ? (
                 <p className="text-sm uppercase tracking-[0.2em] text-bone-dim sm:text-base">
@@ -221,7 +232,7 @@ export default async function HomePage() {
         </section>
       ) : (
         /* --- Hero institucional (nenhum evento destacado) --- */
-        <section className="relative isolate flex min-h-[68svh] items-center justify-center overflow-hidden border-b border-hairline lg:min-h-[72vh]">
+        <section className="relative isolate flex min-h-[58svh] items-center justify-center overflow-hidden border-b border-hairline sm:min-h-[68svh] lg:min-h-[72vh]">
           <AbstractBackdrop />
           <HeroBackdropVideo />
           {/* escurece o vídeo para o texto central respirar */}
@@ -231,17 +242,18 @@ export default async function HomePage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-ink"
           />
+          {/* sem Wordmark aqui: o cabeçalho logo acima já assina a página */}
           <div className="cine-stack relative mx-auto flex max-w-3xl flex-col items-center gap-7 px-6 py-16 text-center sm:px-8">
-            <Wordmark size="lg" />
-            <h1 className="font-display font-light leading-[1.05] tracking-[-0.01em] text-bone [font-size:clamp(2.5rem,7vw,5rem)]">
-              <span className="block">Seus momentos.</span>
-              <span className="block italic text-brass-soft">Seus filmes.</span>
+            <h1 className="font-display font-light leading-[1.05] tracking-[-0.01em] text-bone [font-size:clamp(2.2rem,7vw,5rem)]">
+              <span className="block">Filmes para reviver,</span>
+              <span className="block italic text-brass-soft">
+                não apenas assistir.
+              </span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-bone-dim sm:text-lg">
-              Casamentos, 15 anos e eventos transformados em cinema — para
-              reviver quantas vezes quiser.
+              Casamentos, 15 anos e eventos transformados em cinema.
             </p>
-            <div className="flex flex-col items-center gap-3 sm:flex-row">
+            <div className="flex w-full max-w-sm flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center">
               <Link href="/filmes" className={ctaPrimaryClass}>
                 Explorar nossos filmes
               </Link>
@@ -258,32 +270,20 @@ export default async function HomePage() {
 
       {/* --- Catálogo + blocos de conversão --- */}
       <div className="mx-auto w-full max-w-6xl px-6 sm:px-8 2xl:max-w-[88rem]">
-        <div className="flex flex-col gap-16 py-16 sm:gap-24 sm:py-24">
-          {rows.map((row, i) => (
-            <Fragment key={row.key}>
-              {row.key === "recent" ? <HomeBehindSection /> : null}
-              <Row
-                id={row.id}
-                title={row.title}
-                events={row.events}
-                packagesCta={row.packagesCta}
-              />
-              {i === 0 ? (
-                <>
-                  <HomeValueSection />
-                  <HomeAboutSection />
-                </>
-              ) : null}
-            </Fragment>
+        <div className="flex flex-col gap-16 pb-16 pt-12 sm:gap-24 sm:py-24">
+          {rows.map((row) => (
+            <Row
+              key={row.key}
+              id={row.id}
+              title={row.title}
+              events={row.events}
+              packagesCta={row.packagesCta}
+            />
           ))}
-          {rows.length === 0 ? (
-            <>
-              <HomeValueSection />
-              <HomeAboutSection />
-            </>
-          ) : null}
-          {/* sem fileira "Histórias recentes": entra logo após o catálogo */}
-          {rows.some((r) => r.key === "recent") ? null : <HomeBehindSection />}
+          {/* depois de todo o catálogo: as fileiras de filmes ficam juntas */}
+          <HomeValueSection />
+          {/* quem filma */}
+          <HomeAboutSection />
 
           <HomeCurationSection />
 
@@ -295,6 +295,7 @@ export default async function HomePage() {
             message={WHATSAPP_MESSAGES.planningEvent}
             ctaLabel="Falar com Felipe & Tamires"
             secondary={{ label: "Ver todos os filmes", href: "/filmes" }}
+            note="Atendemos a Serra Gaúcha e região. E o filme chega até vocês num espaço online privado, feito para assistir e rever quando quiserem."
           />
         </div>
       </div>

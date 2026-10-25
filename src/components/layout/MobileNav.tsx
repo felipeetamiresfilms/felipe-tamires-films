@@ -52,7 +52,7 @@ export function MobileNav({
         aria-controls={panelId}
         aria-label={open ? "Fechar menu" : "Abrir menu"}
         onClick={() => setOpen((value) => !value)}
-        className="-mr-1 inline-flex h-10 w-10 items-center justify-center rounded-sm text-bone outline-none transition-colors hover:text-brass-soft focus-visible:ring-2 focus-visible:ring-brass/70"
+        className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-sm text-bone outline-none transition-colors hover:text-brass-soft focus-visible:ring-2 focus-visible:ring-brass/70"
       >
         <svg
           viewBox="0 0 24 24"

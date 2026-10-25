@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPortfolioEvent } from "@/lib/portfolio";
 import { eventTypeLabels } from "@/lib/labels";
-import { formatEventDate } from "@/lib/format";
+import { displayTitle as normalizeTitle, formatEventDate } from "@/lib/format";
 import { portfolioEventWhatsAppMessage } from "@/config/site";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { OG_BASE, OG_IMAGE } from "@/config/seo";
@@ -86,7 +86,7 @@ export default async function PortfolioEventPage({
     notFound();
   }
 
-  const displayTitle = event.title.replace(/^Casamento\s+/i, "");
+  const displayTitle = normalizeTitle(event.title).replace(/^Casamento\s+/i, "");
   const metaLine = [
     event.eventDate ? formatEventDate(event.eventDate) : null,
     eventTypeLabels[event.eventType],

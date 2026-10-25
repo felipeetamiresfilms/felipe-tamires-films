@@ -39,3 +39,30 @@ export function formatDuration(
   }
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
+
+// Partículas que ficam minúsculas no meio de um título em pt-BR.
+const TITLE_PARTICLES = new Set([
+  "a", "as", "o", "os", "e", "da", "das", "de", "do", "dos", "em", "na", "nas", "no", "nos",
+]);
+
+/**
+ * Título para exibição: só normaliza o que foi digitado TODO em maiúsculas
+ * ("15 ANOS DA MARI" -> "15 Anos da Mari"), que destoa da Fraunces leve.
+ * Qualquer título com minúsculas é respeitado como o Backstage salvou.
+ * Não altera o dado — SEO/metadata continuam com o título original.
+ */
+export function displayTitle(title: string): string {
+  const letters = title.replace(/[^\p{L}]/gu, "");
+  if (letters.length < 3 || letters !== letters.toLocaleUpperCase("pt-BR")) {
+    return title;
+  }
+  return title
+    .toLocaleLowerCase("pt-BR")
+    .split(/(\s+)/)
+    .map((word, i) =>
+      i > 0 && TITLE_PARTICLES.has(word)
+        ? word
+        : word.replace(/\p{L}/u, (c) => c.toLocaleUpperCase("pt-BR")),
+    )
+    .join("");
+}

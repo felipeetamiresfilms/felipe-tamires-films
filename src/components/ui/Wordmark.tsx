@@ -29,7 +29,7 @@ export function Wordmark({ size = "sm", className = "" }: WordmarkProps) {
           "font-sans font-medium uppercase text-bone-dim",
           isLarge
             ? "ml-[0.35em] text-[0.5em] tracking-[0.42em]"
-            : "ml-[0.25em] text-[0.62em] tracking-[0.36em]",
+            : "ml-[0.25em] text-[0.7em] tracking-[0.34em]",
         ].join(" ")}
       >
         Films

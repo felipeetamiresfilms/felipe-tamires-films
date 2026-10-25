@@ -30,8 +30,8 @@ export function HomeValueSection() {
           <p className="text-xs uppercase tracking-[0.32em] text-brass">
             Mais do que registrar um dia
           </p>
-          <h2 className="font-display font-light leading-[1.05] text-bone [font-size:clamp(1.9rem,4.5vw,3.25rem)]">
-            Filmes para reviver, não apenas assistir.
+          <h2 className="text-balance font-display font-light leading-[1.05] text-bone [font-size:clamp(1.9rem,4.5vw,3.25rem)]">
+            Seus momentos. <span className="italic text-brass-soft">Seus filmes.</span>
           </h2>
           <p className="max-w-prose text-sm leading-relaxed text-bone-dim sm:text-base">
             Um casamento, uma festa de 15 anos ou uma celebração acontece uma

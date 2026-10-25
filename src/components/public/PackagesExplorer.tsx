@@ -45,12 +45,37 @@ export function PackagesExplorer({
   const headingId = useId();
   const [selected, setSelected] = useState<PackageEventType | null>(initialEvent);
   const btnRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Clique/toque: se os pacotes ficaram abaixo da dobra (celular — os cards
+  // de evento empilhados ocupam a tela), rola até eles. Teclado (setas) não
+  // rola: tiraria o radiogroup de vista no meio da navegação.
+  function revealPanel() {
+    requestAnimationFrame(() => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (panel.getBoundingClientRect().top < window.innerHeight * 0.7) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      panel.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  }
 
   function selectEvent(id: PackageEventType) {
     setSelected(id);
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", `/pacotes?evento=${id}`);
     }
+  }
+
+  // Volta ao seletor (no celular ele fica bem acima dos pacotes) e foca a
+  // opção marcada, para trocar de evento sem rolar a página inteira.
+  function backToSelector() {
+    const index = PACKAGE_EVENT_TYPES.findIndex((e) => e.id === selected);
+    const btn = btnRefs.current[Math.max(index, 0)];
+    if (!btn) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    btn.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    btn.focus({ preventScroll: true });
   }
 
   function isTabStop(index: number) {
@@ -108,7 +133,10 @@ export function PackagesExplorer({
             meta={meta}
             checked={selected === meta.id}
             tabStop={isTabStop(index)}
-            onSelect={() => selectEvent(meta.id)}
+            onSelect={() => {
+              selectEvent(meta.id);
+              revealPanel();
+            }}
             onKeyDown={(e) => handleKeyDown(e, index)}
             buttonRef={(el) => {
               btnRefs.current[index] = el;
@@ -117,17 +145,26 @@ export function PackagesExplorer({
         ))}
       </div>
 
-      <div>
+      <div ref={panelRef} className="scroll-mt-6">
         {selected === null ? (
-          <p className="text-sm text-bone-dim/70">
+          <p className="text-sm text-bone-dim">
             Escolha o tipo de evento para ver os pacotes.
           </p>
         ) : (
           <div key={selected} className="pkg-swap flex flex-col gap-12">
             <div className="flex flex-col gap-2">
-              <p className="text-xs uppercase tracking-[0.32em] text-brass">
-                {eventLabel(selected)} · três caminhos
-              </p>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <p className="text-xs uppercase tracking-[0.32em] text-brass">
+                  {eventLabel(selected)} · três caminhos
+                </p>
+                <button
+                  type="button"
+                  onClick={backToSelector}
+                  className="-my-3 py-3 text-xs uppercase tracking-[0.24em] text-bone-dim underline-offset-4 transition-colors hover:text-bone hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60 lg:hidden"
+                >
+                  Trocar evento ↑
+                </button>
+              </div>
               <p className="max-w-prose text-sm leading-relaxed text-bone-dim">
                 Os níveis se somam: o Essência cobre os momentos principais, o
                 Memória amplia a cobertura e o Experiência guarda a história
@@ -197,7 +234,7 @@ function EventTypeCard({
       tabIndex={tabStop ? 0 : -1}
       onClick={onSelect}
       onKeyDown={onKeyDown}
-      className={`group relative flex aspect-[16/10] min-h-[9rem] w-full min-w-0 flex-col justify-end overflow-hidden rounded-2xl border p-5 text-left transition duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-safe:hover:-translate-y-1 sm:aspect-[3/4] ${
+      className={`group relative flex h-36 w-full min-w-0 flex-col justify-end overflow-hidden rounded-2xl border p-5 text-left sm:h-auto transition duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-safe:hover:-translate-y-1 sm:aspect-[3/4] ${
         checked
           ? "border-brass ring-2 ring-brass"
           : "border-hairline hover:border-brass/40"
@@ -224,7 +261,7 @@ function EventTypeCard({
       />
 
       {checked ? (
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-brass px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-ink">
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-brass px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-ink">
           <svg
             viewBox="0 0 20 20"
             aria-hidden="true"
@@ -266,7 +303,7 @@ function PackageCard({
       }`}
     >
       {featured ? (
-        <span className="inline-flex self-start rounded-full border border-brass/40 bg-brass/10 px-3 py-1 text-[0.62rem] font-medium uppercase tracking-[0.22em] text-brass-soft">
+        <span className="inline-flex self-start rounded-full border border-brass/40 bg-brass/10 px-3 py-1 text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-brass-soft">
           {FEATURED_BADGE}
         </span>
       ) : null}
@@ -283,7 +320,7 @@ function PackageCard({
       </header>
 
       {pkg.buildsOn ? (
-        <p className="text-[0.7rem] uppercase tracking-[0.24em] text-brass/85">
+        <p className="text-xs uppercase tracking-[0.24em] text-brass/85">
           {pkg.buildsOn}
         </p>
       ) : null}
@@ -386,7 +423,7 @@ function ExampleFilm({ meta }: { meta: PackageEventMeta }) {
             >
               {meta.exampleFilmLabel}
             </button>
-            <span className="text-[0.65rem] uppercase tracking-[0.24em] text-bone-dim/50">
+            <span className="text-[0.6875rem] uppercase tracking-[0.24em] text-bone-dim/70">
               {EXAMPLE_FILM_BLOCK.pendingHint}
             </span>
           </>

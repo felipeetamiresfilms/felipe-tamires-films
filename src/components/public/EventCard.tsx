@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { eventTypeLabels } from "@/lib/labels";
-import { formatEventDate } from "@/lib/format";
+import { displayTitle, formatEventDate } from "@/lib/format";
 import type { PublicPortfolioCard } from "@/lib/portfolio";
 
 /**
@@ -18,12 +18,16 @@ export function EventCard({
   /** Extra utilities — ex.: largura fixa numa fileira horizontal da home. */
   className?: string;
 }) {
+  const title = displayTitle(event.title);
+  // Cada parte fica inteira na mesma linha: no mobile a quebra cai entre
+  // "Casamento ·" e a data, nunca no meio de "12 de setembro de 2026".
   const meta = [
     eventTypeLabels[event.eventType],
     event.eventDate ? formatEventDate(event.eventDate) : event.location,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ].filter(Boolean);
+  // Local numa segunda linha (quando a data já ocupa a primeira): é a prova
+  // local — Gramado, Canela, Serra Grande — para quem compara filmmakers.
+  const place = event.eventDate ? event.location : null;
 
   return (
     <Link
@@ -34,7 +38,7 @@ export function EventCard({
         {event.coverUrl ? (
           <Image
             src={event.coverUrl}
-            alt={`Capa de ${event.title}`}
+            alt={`Capa de ${title}`}
             fill
             unoptimized
             sizes="(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"
@@ -57,12 +61,25 @@ export function EventCard({
       </div>
 
       <div className="flex flex-col gap-1.5 p-5">
-        <h3 className="font-display text-xl font-light leading-tight text-bone">
-          {event.title}
+        <h3 className="line-clamp-2 text-balance font-display text-xl font-light leading-tight text-bone">
+          {title}
         </h3>
-        {meta ? (
+        {meta.length ? (
           <p className="text-xs uppercase tracking-[0.18em] text-bone-dim">
-            {meta}
+            {meta.map((part, i) => (
+              <span key={i} className="whitespace-nowrap">
+                {i > 0 ? " · " : ""}
+                {part}
+              </span>
+            ))}
+          </p>
+        ) : null}
+        {place ? (
+          <p
+            title={place}
+            className="truncate text-xs uppercase tracking-[0.18em] text-bone-dim/80"
+          >
+            {place}
           </p>
         ) : null}
       </div>

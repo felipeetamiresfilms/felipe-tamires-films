@@ -16,6 +16,7 @@ export function ContactBanner({
   ctaLabel,
   contactLocation,
   secondary,
+  note,
 }: {
   eyebrow?: string;
   title: string;
@@ -25,6 +26,8 @@ export function ContactBanner({
   /** Ponto de contato do `contact_click` (ex.: "home_final_cta"). */
   contactLocation: string;
   secondary?: { label: string; href: string };
+  /** Linha de apoio discreta abaixo dos botões (ex.: região atendida). */
+  note?: string;
 }) {
   return (
     <section
@@ -40,13 +43,13 @@ export function ContactBanner({
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="font-display font-light leading-[1.1] text-bone [font-size:clamp(1.75rem,4vw,2.75rem)]">
+        <h2 className="text-balance font-display font-light leading-[1.1] text-bone [font-size:clamp(1.75rem,4vw,2.75rem)]">
           {title}
         </h2>
         <p className="max-w-prose text-sm leading-relaxed text-bone-dim sm:text-base">
           {text}
         </p>
-        <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row">
+        <div className="flex w-full max-w-sm flex-col items-stretch gap-3 pt-2 sm:w-auto sm:max-w-none sm:flex-row sm:items-center">
           <WhatsAppCTA
             message={message}
             label={ctaLabel}
@@ -59,6 +62,11 @@ export function ContactBanner({
             </Link>
           ) : null}
         </div>
+        {note ? (
+          <p className="max-w-md text-balance text-xs leading-relaxed text-bone-dim">
+            {note}
+          </p>
+        ) : null}
       </div>
     </section>
   );

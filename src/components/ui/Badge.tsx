@@ -9,7 +9,7 @@ export function Badge({ children, className = "" }: BadgeProps) {
     <span
       className={[
         "inline-flex items-center rounded-full border border-hairline bg-raised/60",
-        "px-3 py-1 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-bone-dim",
+        "px-3 py-1 text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-bone-dim",
         className,
       ].join(" ")}
     >

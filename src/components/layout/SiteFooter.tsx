@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ConsentPreferencesButton } from "@/components/consent/ConsentPreferencesButton";
 
 const footerLink =
-  "underline-offset-4 transition-colors hover:text-bone hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60";
+  // padding vertical com margem negativa: área de toque ~44px sem mudar o layout
+  "-my-3 inline-block py-3 underline-offset-4 transition-colors hover:text-bone hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60";
 
 /** Rodapé discreto. */
 export function SiteFooter() {

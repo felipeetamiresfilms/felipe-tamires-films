@@ -4,6 +4,7 @@ import { createServerAuthClient } from "@/lib/supabase/server";
 import { buildEventSlug, slugifyTitle } from "@/lib/admin/slug";
 import type { ClientInput, EventInput, PartnerInput } from "@/lib/admin/validation";
 import type { PublishStatus } from "@/types";
+import type { CoverFraming } from "@/lib/cover-framing";
 
 /**
  * Escritas do painel. SEMPRE pela sessão autenticada + RLS.
@@ -749,6 +750,7 @@ export async function getPartnerStatusRow(
   return { id: row.id, name: row.name, coverImagePath: row.cover_image_path };
 }
 
+/** Trocar ou remover a capa volta o enquadramento ao padrão (era da foto antiga). */
 export async function setPartnerCoverPath(
   id: string,
   path: string | null,
@@ -756,7 +758,24 @@ export async function setPartnerCoverPath(
   const supabase = await createServerAuthClient();
   const { data, error } = await supabase
     .from("partners")
-    .update({ cover_image_path: path })
+    .update({ cover_image_path: path, cover_framing: null })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("partner_not_found");
+}
+
+/** `null` restaura o enquadramento padrão. Validar com `parseCoverFraming` antes. */
+export async function setPartnerCoverFraming(
+  id: string,
+  framing: CoverFraming | null,
+): Promise<void> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase
+    .from("partners")
+    .update({ cover_framing: framing })
     .eq("id", id)
     .select("id")
     .maybeSingle();

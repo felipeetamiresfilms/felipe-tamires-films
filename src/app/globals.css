@@ -373,3 +373,30 @@ html.no-reveal [data-rule] {
     transform: none;
   }
 }
+
+/* Enquadramento não destrutivo da capa do parceiro (src/lib/cover-framing.ts).
+   Só existe quando o parceiro tem `cover_framing`; sem ele o hero segue o
+   padrão (object-cover centralizado). Mobile < 640px, desktop >= 640px. */
+.cover-framed {
+  --cf-x: var(--cf-xm, 50%);
+  --cf-y: var(--cf-ym, 50%);
+  --cf-z: var(--cf-zm, 1);
+}
+@media (min-width: 640px) {
+  .cover-framed {
+    --cf-x: var(--cf-xd, 50%);
+    --cf-y: var(--cf-yd, 50%);
+    --cf-z: var(--cf-zd, 1);
+  }
+}
+.cover-frame-zoom {
+  transform: scale(var(--cf-z, 1));
+  transform-origin: var(--cf-x, 50%) var(--cf-y, 50%);
+}
+.cover-frame-img {
+  object-position: var(--cf-x, 50%) var(--cf-y, 50%);
+}
+/* Ken Burns cresce a partir do mesmo ponto focal escolhido no editor. */
+html.js .cover-frame-img.cine-kenburns {
+  transform-origin: var(--cf-x, 50%) var(--cf-y, 50%);
+}

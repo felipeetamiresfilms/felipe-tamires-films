@@ -20,11 +20,13 @@ import {
   insertPartnerMedia,
   movePartnerMedia,
   partnerCategoryExists,
+  setPartnerCoverFraming,
   setPartnerCoverPath,
   updatePartner,
   type PartnerVideoFields,
 } from "@/lib/admin/mutations";
 import { normalizeYouTube } from "@/lib/admin/youtube";
+import { parseCoverFraming, type CoverFraming } from "@/lib/cover-framing";
 
 const PARTNER_BUCKET = "partner-media";
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024; // 10 MiB
@@ -327,6 +329,55 @@ export async function removePartnerCoverAction(formData: FormData): Promise<void
     if (isRedirectError(err)) throw err;
     console.error("removePartnerCoverAction", err);
     backToPartner(partnerId, "erro=acao");
+  }
+}
+
+/**
+ * Enquadramento da capa (só CSS; o arquivo no storage não é tocado).
+ * `intent=reset` volta ao padrão (`null`). O JSON vindo do browser é revalidado
+ * aqui — forma estrita e faixas de x/y/zoom em `parseCoverFraming`.
+ */
+export async function setPartnerCoverFramingAction(
+  formData: FormData,
+): Promise<void> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") redirect("/backstage-ft/login");
+
+  const partnerId = String(formData.get("partnerId") ?? "");
+  if (!isUuid(partnerId)) redirect("/backstage-ft/curadoria");
+
+  const reset = formData.get("intent") === "reset";
+  let framing: CoverFraming | null = null;
+  if (!reset) {
+    const raw = String(formData.get("framing") ?? "");
+    if (raw.length === 0 || raw.length > 500) {
+      backToPartner(partnerId, "erro=enquadramento");
+    }
+    try {
+      framing = parseCoverFraming(JSON.parse(raw));
+    } catch {
+      framing = null;
+    }
+    if (!framing) backToPartner(partnerId, "erro=enquadramento");
+  }
+
+  try {
+    const partner = await getPartnerStatusRow(partnerId);
+    if (!partner) redirect("/backstage-ft/curadoria");
+    if (!partner.coverImagePath) backToPartner(partnerId, "erro=enquadramento");
+
+    await setPartnerCoverFraming(partnerId, framing);
+
+    revalidatePath("/backstage-ft", "layout");
+    revalidatePath("/recomendamos");
+    backToPartner(
+      partnerId,
+      reset ? "ok=enquadramento-restaurado" : "ok=enquadramento-salvo",
+    );
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error("setPartnerCoverFramingAction", err);
+    backToPartner(partnerId, "erro=enquadramento");
   }
 }
 

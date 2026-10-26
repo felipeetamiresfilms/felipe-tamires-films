@@ -6,6 +6,7 @@ import { SITE_NAME, SITE_URL } from "@/config/site";
 import { OG_BASE, OG_IMAGE } from "@/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { PartnerWhatsAppCTA } from "@/components/public/PartnerWhatsAppCTA";
+import { coverFramingVars } from "@/lib/cover-framing";
 
 export const dynamic = "force-dynamic";
 
@@ -102,8 +103,27 @@ export default async function PartnerPublicPage({
     <div className="flex flex-1 flex-col">
       <JsonLd data={breadcrumbJsonLd} />
       <section className="relative isolate flex min-h-[46svh] items-end overflow-hidden border-b border-hairline">
-        <div className="absolute inset-0">
-          {partner.coverUrl ? (
+        <div
+          className={
+            partner.coverFraming ? "cover-framed absolute inset-0" : "absolute inset-0"
+          }
+          style={
+            partner.coverFraming ? coverFramingVars(partner.coverFraming) : undefined
+          }
+        >
+          {partner.coverUrl && partner.coverFraming ? (
+            // Enquadramento personalizado (backstage): só CSS sobre o original.
+            <div className="cover-frame-zoom absolute inset-0">
+              <Image
+                src={partner.coverUrl}
+                alt={`Foto de ${partner.name}`}
+                fill
+                unoptimized
+                sizes="100vw"
+                className="cover-frame-img cine-kenburns object-cover"
+              />
+            </div>
+          ) : partner.coverUrl ? (
             <Image
               src={partner.coverUrl}
               alt={`Foto de ${partner.name}`}

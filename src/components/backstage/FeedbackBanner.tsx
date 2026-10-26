@@ -18,6 +18,8 @@ const OK_MESSAGES: Record<string, string> = {
   "video-movido": "Ordem dos vídeos atualizada.",
   "capa-atualizada": "Capa atualizada.",
   "capa-removida": "Capa removida.",
+  "enquadramento-salvo": "Enquadramento da capa salvo.",
+  "enquadramento-restaurado": "Enquadramento da capa restaurado ao padrão.",
   "portfolio-ativado": "Evento ativado no portfólio público.",
   "portfolio-desativado": "Evento removido do portfólio público.",
   "destaque-ativado": "Evento marcado como destaque na home.",
@@ -38,6 +40,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Confirme a autorização de uso antes de ativar o portfólio.",
   portfolio: "Não foi possível atualizar o portfólio. Tente de novo.",
   acao: "Não foi possível concluir a ação. Tente de novo.",
+  enquadramento: "Não foi possível salvar o enquadramento da capa. Tente de novo.",
   galeria:
     "Não foi possível enviar a foto. Use JPEG, PNG ou WEBP de até 10 MB.",
 };

@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/backstage/StatusBadge";
 import { CopyLinkButton } from "@/components/backstage/CopyLinkButton";
 import { ghostButtonClass, subtleButtonClass } from "@/components/backstage/form-ui";
 import { SubmitButton } from "@/components/backstage/SubmitButton";
+import { CoverFramingEditor } from "@/components/backstage/CoverFramingEditor";
 import {
   addPartnerMediaAction,
   movePartnerMediaAction,
@@ -142,6 +143,36 @@ export default async function PartnerDetailPage({
           ) : (
             <p className="text-sm text-bone-dim">Sem capa ainda.</p>
           )}
+
+          {coverPreviewUrl ? (
+            <details
+              open={ok?.startsWith("enquadramento") || erro === "enquadramento"}
+              className="group rounded-lg border border-hairline bg-raised/30"
+            >
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm text-bone transition-colors hover:text-brass-soft">
+                <span>
+                  Ajustar enquadramento da capa
+                  <span className="ml-2 text-xs text-bone-dim">
+                    {partner.coverFraming ? "· personalizado" : "· padrão"}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="text-bone-dim transition-transform group-open:rotate-180">
+                  ▾
+                </span>
+              </summary>
+              <div className="border-t border-hairline p-4">
+                <CoverFramingEditor
+                  key={JSON.stringify(partner.coverFraming)}
+                  partnerId={partner.id}
+                  partnerName={partner.name}
+                  categoryName={partner.categoryName}
+                  metaLine={[partner.categoryName, partner.location].filter(Boolean).join(" · ")}
+                  imageUrl={coverPreviewUrl}
+                  initial={partner.coverFraming}
+                />
+              </div>
+            </details>
+          ) : null}
 
           <form
             action={setPartnerCoverAction}

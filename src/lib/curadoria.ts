@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
+import { parseCoverFraming, type CoverFraming } from "@/lib/cover-framing";
 
 /**
  * Camada de dados de NOSSA CURADORIA (/recomendamos).
@@ -81,6 +82,8 @@ export interface PublicPartnerDetail extends PublicPartnerCard {
   instagramUrl: string | null;
   websiteUrl: string | null;
   videoEmbedUrl: string | null;
+  /** `null` = enquadramento padrão da capa no hero. */
+  coverFraming: CoverFraming | null;
   gallery: PublicPartnerGalleryItem[];
 }
 
@@ -197,7 +200,7 @@ export const getPartnerBySlug = cache(
     const { data, error } = await supabase
       .from("partners")
       .select(
-        `${CARD_COLUMNS}, short_description, description, recommendation_text, whatsapp_number, instagram_url, website_url, video_embed_url, partner_media(storage_path, alt_text, sort_order)`,
+        `${CARD_COLUMNS}, short_description, description, recommendation_text, whatsapp_number, instagram_url, website_url, video_embed_url, cover_framing, partner_media(storage_path, alt_text, sort_order)`,
       )
       .eq("slug", clean)
       .eq("status", "published")
@@ -217,6 +220,7 @@ export const getPartnerBySlug = cache(
       instagram_url: string | null;
       website_url: string | null;
       video_embed_url: string | null;
+      cover_framing: unknown;
       partner_media:
         | { storage_path: string; alt_text: string | null; sort_order: number }[]
         | null;
@@ -237,6 +241,7 @@ export const getPartnerBySlug = cache(
       instagramUrl: row.instagram_url,
       websiteUrl: row.website_url,
       videoEmbedUrl: row.video_embed_url,
+      coverFraming: parseCoverFraming(row.cover_framing),
       gallery,
     };
   },

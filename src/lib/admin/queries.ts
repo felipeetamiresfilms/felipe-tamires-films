@@ -8,6 +8,7 @@ import type {
   VideoProvider,
 } from "@/types";
 import { isUuid } from "@/lib/admin/validation";
+import { parseCoverFraming, type CoverFraming } from "@/lib/cover-framing";
 
 /**
  * Consultas do painel. Sempre pela SESSÃO AUTENTICADA + RLS.
@@ -628,6 +629,7 @@ export interface AdminPartnerDetail {
   instagramUrl: string | null;
   websiteUrl: string | null;
   coverImagePath: string | null;
+  coverFraming: CoverFraming | null;
   videoProvider: string | null;
   videoProviderId: string | null;
   videoEmbedUrl: string | null;
@@ -648,7 +650,7 @@ export async function getAdminPartnerDetail(
   const { data, error } = await supabase
     .from("partners")
     .select(
-      "id, category_id, name, slug, short_description, description, recommendation_text, location, whatsapp_number, instagram_url, website_url, cover_image_path, video_provider, video_provider_id, video_embed_url, featured, sort_order, status, created_at, partner_categories(name), partner_media(id, storage_path, alt_text, sort_order)",
+      "id, category_id, name, slug, short_description, description, recommendation_text, location, whatsapp_number, instagram_url, website_url, cover_image_path, cover_framing, video_provider, video_provider_id, video_embed_url, featured, sort_order, status, created_at, partner_categories(name), partner_media(id, storage_path, alt_text, sort_order)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -669,6 +671,7 @@ export async function getAdminPartnerDetail(
     instagram_url: string | null;
     website_url: string | null;
     cover_image_path: string | null;
+    cover_framing: unknown;
     video_provider: string | null;
     video_provider_id: string | null;
     video_embed_url: string | null;
@@ -711,6 +714,7 @@ export async function getAdminPartnerDetail(
     instagramUrl: row.instagram_url,
     websiteUrl: row.website_url,
     coverImagePath: row.cover_image_path,
+    coverFraming: parseCoverFraming(row.cover_framing),
     videoProvider: row.video_provider,
     videoProviderId: row.video_provider_id,
     videoEmbedUrl: row.video_embed_url,

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { SubmitButton } from "@/components/backstage/SubmitButton";
 import {
   FieldError,
@@ -9,7 +9,10 @@ import {
   fieldClass,
   ghostButtonClass,
   labelClass,
+  subtleButtonClass,
 } from "@/components/backstage/form-ui";
+import { CATEGORY_NAME_MAX } from "@/lib/admin/partner-category";
+import { createPartnerCategoryAction } from "./actions";
 import { EMPTY_FORM_STATE, type FormState } from "@/lib/admin/form";
 import { publishStatusLabels } from "@/lib/labels";
 
@@ -48,16 +51,48 @@ export function PartnerForm({
 }: Props) {
   const [state, formAction] = useActionState(action, EMPTY_FORM_STATE);
 
-  if (categories.length === 0) {
-    return (
-      <div className="flex max-w-lg flex-col items-start gap-4 rounded-xl border border-hairline bg-surface p-6">
-        <p className="text-sm text-bone-dim">
-          Nenhuma categoria cadastrada ainda. Cadastre uma categoria (via SQL
-          Editor do Supabase, tabela <code>partner_categories</code>) antes de
-          criar um parceiro.
-        </p>
-      </div>
-    );
+  // Categorias: lista local para a recém-criada aparecer (e ficar selecionada)
+  // sem recarregar a página nem perder o que já foi digitado no formulário.
+  const [options, setOptions] = useState(categories);
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryMessage, setCategoryMessage] = useState<{
+    kind: "ok" | "error";
+    text: string;
+  } | null>(null);
+  const [categoryPending, startCategoryTransition] = useTransition();
+
+  function closeCategoryCreator() {
+    setCreatingCategory(false);
+    setNewCategoryName("");
+    setCategoryMessage(null);
+  }
+
+  function submitNewCategory() {
+    if (categoryPending) return;
+    startCategoryTransition(async () => {
+      try {
+        const result = await createPartnerCategoryAction(newCategoryName);
+        if (!result.ok) {
+          setCategoryMessage({ kind: "error", text: result.error });
+          return;
+        }
+        setOptions((prev) => [...prev, result.category]);
+        setCategoryId(result.category.id);
+        setCreatingCategory(false);
+        setNewCategoryName("");
+        setCategoryMessage({
+          kind: "ok",
+          text: `Categoria “${result.category.name}” criada e selecionada.`,
+        });
+      } catch {
+        setCategoryMessage({
+          kind: "error",
+          text: "Não foi possível criar a categoria. Tente novamente.",
+        });
+      }
+    });
   }
 
   return (
@@ -76,26 +111,95 @@ export function PartnerForm({
         <FieldError message={state.fieldErrors?.name} />
       </label>
 
-      <label className={labelClass}>
-        Categoria *
-        <select
-          name="categoryId"
-          required
-          defaultValue={initial?.categoryId ?? ""}
-          className={fieldClass}
-        >
-          <option value="" disabled>
-            Selecione uma categoria
-          </option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-              {category.status === "inactive" ? " (inativa)" : ""}
+      <div className="flex flex-col gap-2">
+        <label className={labelClass}>
+          Categoria *
+          <select
+            name="categoryId"
+            required
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={fieldClass}
+          >
+            <option value="" disabled>
+              {options.length === 0
+                ? "Nenhuma categoria — crie uma abaixo"
+                : "Selecione uma categoria"}
             </option>
-          ))}
-        </select>
-        <FieldError message={state.fieldErrors?.categoryId} />
-      </label>
+            {options.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+                {category.status === "inactive" ? " (inativa)" : ""}
+              </option>
+            ))}
+          </select>
+          <FieldError message={state.fieldErrors?.categoryId} />
+        </label>
+
+        {creatingCategory ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-hairline bg-surface/60 p-3">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                autoFocus
+                aria-label="Nome da nova categoria"
+                placeholder="Ex.: DJ"
+                maxLength={CATEGORY_NAME_MAX}
+                value={newCategoryName}
+                disabled={categoryPending}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter aqui NÃO pode enviar o formulário do parceiro.
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitNewCategory();
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    closeCategoryCreator();
+                  }
+                }}
+                className={`${fieldClass} sm:flex-1`}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={submitNewCategory}
+                  disabled={categoryPending}
+                  className={subtleButtonClass}
+                >
+                  {categoryPending ? "Salvando…" : "Criar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeCategoryCreator}
+                  disabled={categoryPending}
+                  className={subtleButtonClass}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+            {categoryMessage?.kind === "error" ? (
+              <FieldError message={categoryMessage.text} />
+            ) : null}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryMessage(null);
+              setCreatingCategory(true);
+            }}
+            className="self-start text-xs tracking-[0.08em] text-bone-dim underline-offset-4 transition-colors hover:text-bone hover:underline"
+          >
+            + Nova categoria
+          </button>
+        )}
+        {categoryMessage?.kind === "ok" ? (
+          <span role="status" className="text-xs text-bone-dim">
+            {categoryMessage.text}
+          </span>
+        ) : null}
+      </div>
 
       <label className={labelClass}>
         Descrição curta

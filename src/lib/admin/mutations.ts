@@ -2,6 +2,7 @@ import "server-only";
 
 import { createServerAuthClient } from "@/lib/supabase/server";
 import { buildEventSlug, slugifyTitle } from "@/lib/admin/slug";
+import { findDuplicateCategory } from "@/lib/admin/partner-category";
 import type { ClientInput, EventInput, PartnerInput } from "@/lib/admin/validation";
 import type { PublishStatus } from "@/types";
 import type { CoverFraming } from "@/lib/cover-framing";
@@ -636,6 +637,51 @@ export async function partnerCategoryExists(id: string): Promise<boolean> {
     .maybeSingle();
   if (error) throw error;
   return Boolean(data);
+}
+
+export type CreatePartnerCategoryResult =
+  | { ok: true; category: { id: string; name: string; status: "active" } }
+  | { ok: false; duplicateOf: string };
+
+/**
+ * Cria uma categoria ativa no fim da lista (`sort_order` = maior + 1).
+ * Duplicata (mesmo nome normalizado ou mesmo slug) não grava nada. A
+ * constraint `unique(slug)` do banco cobre a corrida entre dois admins.
+ */
+export async function insertPartnerCategory(
+  name: string,
+): Promise<CreatePartnerCategoryResult> {
+  const supabase = await createServerAuthClient();
+  const slug = slugifyTitle(name);
+
+  const { data: rows, error: listErr } = await supabase
+    .from("partner_categories")
+    .select("name, slug, sort_order");
+  if (listErr) throw listErr;
+
+  const existing = (rows ?? []) as {
+    name: string;
+    slug: string;
+    sort_order: number;
+  }[];
+  const duplicate = findDuplicateCategory(existing, name, slug);
+  if (duplicate) return { ok: false, duplicateOf: duplicate.name };
+
+  const nextOrder =
+    existing.reduce((max, row) => Math.max(max, row.sort_order ?? 0), 0) + 1;
+
+  const { data, error } = await supabase
+    .from("partner_categories")
+    .insert({ name, slug, sort_order: nextOrder, status: "active" })
+    .select("id, name")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") return { ok: false, duplicateOf: name };
+    throw error;
+  }
+  const row = data as { id: string; name: string };
+  return { ok: true, category: { id: row.id, name: row.name, status: "active" } };
 }
 
 /**

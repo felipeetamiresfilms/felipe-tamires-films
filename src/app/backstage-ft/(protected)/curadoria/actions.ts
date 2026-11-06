@@ -17,6 +17,7 @@ import {
   getPartnerMediaInPartner,
   getPartnerStatusRow,
   insertPartner,
+  insertPartnerCategory,
   insertPartnerMedia,
   movePartnerMedia,
   partnerCategoryExists,
@@ -26,6 +27,7 @@ import {
   type PartnerVideoFields,
 } from "@/lib/admin/mutations";
 import { normalizeYouTube } from "@/lib/admin/youtube";
+import { validateCategoryName } from "@/lib/admin/partner-category";
 import { parseCoverFraming, type CoverFraming } from "@/lib/cover-framing";
 
 const PARTNER_BUCKET = "partner-media";
@@ -242,6 +244,41 @@ export async function updatePartnerAction(
   revalidatePath("/backstage-ft", "layout");
   revalidatePath("/recomendamos");
   redirect(`/backstage-ft/curadoria/${id}?ok=parceiro-atualizado`);
+}
+
+// --- Categoria: criar pelo formulário do parceiro --------------------
+
+export type CreateCategoryState =
+  | { ok: true; category: { id: string; name: string; status: "active" } }
+  | { ok: false; error: string };
+
+/**
+ * Chamada direto do formulário do parceiro (não é um <form> próprio — não
+ * dá para aninhar forms). Sem revalidatePath: a categoria nova não tem
+ * parceiro publicado, então nada muda nas páginas públicas até salvar um.
+ */
+export async function createPartnerCategoryAction(
+  rawName: string,
+): Promise<CreateCategoryState> {
+  const access = await loadBackstageAccess();
+  if (access.state !== "ok") return { ok: false, error: SESSION_EXPIRED_ERROR };
+
+  const checked = validateCategoryName(typeof rawName === "string" ? rawName : "");
+  if (!checked.ok) return checked;
+
+  try {
+    const result = await insertPartnerCategory(checked.name);
+    if (!result.ok) {
+      return {
+        ok: false,
+        error: `Já existe a categoria “${result.duplicateOf}”. Selecione-a na lista.`,
+      };
+    }
+    return result;
+  } catch (err) {
+    console.error("createPartnerCategoryAction", err);
+    return { ok: false, error: "Não foi possível criar a categoria. Tente novamente." };
+  }
 }
 
 // --- Capa do parceiro (upload no bucket público partner-media) ------
